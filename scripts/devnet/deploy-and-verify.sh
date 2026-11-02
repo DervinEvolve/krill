@@ -284,6 +284,8 @@ balance() {
 ensure_balance() {
   local need=$1 what=$2 floor=$((min_sol * LAMPORTS_PER_SOL)) have tries=0
   ((need > floor)) || need=$floor
+  # A deploy that died mid-way leaves a funded buffer account; reclaim it before counting.
+  ((dry_run)) || solana program close --buffers -u "$rpc_url" --keypair "$deployer" >/dev/null 2>&1 || true
   have=$(balance)
   if ((dry_run)); then
     log "dry run: would need $(sol "$need") SOL for $what, topping up with:"
@@ -370,10 +372,6 @@ deploy() {
   # hundred write transactions a deploy needs and fails with "Max retries exceeded".
   local common=(-u "$rpc_url" --keypair "$deployer" --upgrade-authority "$deployer" --max-sign-attempts 20)
   ((via_rpc)) && common+=(--use-rpc)
-  # A deploy that died mid-way leaves a funded buffer account; reclaim it first.
-  if ((!dry_run)) && [[ $program_state != present || $(solana-verify get-program-hash -u "$rpc_url" "$PROGRAM_ID" 2>/dev/null | only_hash) != "$exe_hash" ]]; then
-    solana program close --buffers -u "$rpc_url" --keypair "$deployer" >/dev/null 2>&1 || true
-  fi
 
   if [[ $program_state != present ]]; then
     ensure_balance "$first_need" "a first deploy with --max-len $max_len"
