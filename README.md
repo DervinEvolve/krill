@@ -14,19 +14,19 @@ Quadratic voting with exact integer math, and a milestone escrow that pays contr
 <p align="center"><img src="docs/images/hero.png" width="880" alt="The Krill Arena in a browser window: a hand-inked desk where eleven krill figurines and one whale have voted, the big numbers read FOR 347.850 and AGAINST 316.227, and a terminal beside it shows the real transcript lines: the whale voting against with 100,000 credits for 316.227 votes, a krill finalizing the vote, and the summary for 347.850542611 against 316.227766016"></p>
 <p align="center"><sub>Eleven agents holding 1 SOL each out-vote one agent holding 100 SOL, on a real local validator. 11 × √1,000 > √100,000.</sub></p>
 
-**Live demo:** https://dervinevolve.github.io/krill/ replays a recorded run of the Arena in your browser, no install needed.
+**Live demo:** https://dervinevolve.github.io/krill/ plays back a recorded run of the Arena in your browser. Nothing to install.
 
 ---
 
 ## Why "Krill"
 
-Krill are the smallest animals in a whale's food chain. One krill is nothing. All the krill in the ocean together weigh more than every whale combined.
+Krill are tiny. A whale eats millions of them in a day. Put every krill in the ocean on a scale and they outweigh every whale alive.
 
-That is the whole idea of this project. In most token-voting systems, a "whale" (one wallet with a huge balance) gets votes in proportion to its money: 100× the money means 100× the votes, and everyone else is decoration. Krill replaces that rule with **quadratic voting**: your votes are the **square root** of what you spend. 100× the money buys only 10× the votes. Eleven members with 1 SOL each beat one member with 100 SOL.
+The name comes from that. Most token voting gives you votes in proportion to your balance, so one wallet with 100x the money gets 100x the votes and decides everything. Krill uses **quadratic voting** instead: your votes are the **square root** of what you spend. 100x the money gets you 10x the votes. Eleven members with 1 SOL each can beat one member with 100 SOL.
 
-The name is a reminder of who the system is for. It does not hunt whales; a whale can still join and still carries more weight than any single small member. It just can't carry unlimited weight.
+Whales can still join. A whale still outweighs any single small member, just not all of them together.
 
-I do this for fun. Solana is where I started because its account model and compute budget make the trade-offs explicit, but the ideas here (quadratic voting, integer square roots, milestone escrow) are not Solana-specific, and I will try other chains eventually.
+I do this for fun. I started on Solana because I know its account model best, but nothing here is Solana-specific and I will try other chains eventually.
 
 ## What it does
 
@@ -46,7 +46,7 @@ I do this for fun. Solana is where I started because its account model and compu
 
 ## How quadratic voting works here
 
-A member who deposits 1 SOL holds 1,000 credits. Spending all of them buys √1,000 ≈ 31.62 votes. A whale with 100 SOL holds 100,000 credits and buys √100,000 ≈ 316.23 votes: a hundred times the money, ten times the voice.
+A member who deposits 1 SOL holds 1,000 credits. Spending all of them buys √1,000 ≈ 31.62 votes. A whale with 100 SOL holds 100,000 credits and buys √100,000 ≈ 316.23 votes. 100x the money, 10x the votes.
 
 | Deposit | Credits | Votes (on-chain value) |
 |---|---|---|
@@ -59,7 +59,7 @@ A member who deposits 1 SOL holds 1,000 credits. Spending all of them buys √1,
 
 <p align="center"><img src="docs/images/quadratic-curve.png" width="880" alt="Votes grow with the square root of credits: eleven krill with 1,000 credits each reach 347.9 votes, one whale with 100,000 credits reaches 316.2"></p>
 
-Two rules make this hold up under pressure:
+Two rules keep this from being gamed:
 
 - **The square root is taken on each voter's cumulative credits, never per transaction.** If you vote 400 credits and later add 500 more, you hold √900 = 30 votes, not √400 + √500 = 42.36. Without this rule, anyone could split a big vote into many small ones and get linear voting back. The program keeps a `VoteReceipt` per voter per proposal and adjusts the tally by the *difference* between the new and the old square root.
 - **You cannot switch sides.** Once a receipt is "for", every top-up is "for". Switching would let a voter move tallies around for free.
@@ -69,13 +69,13 @@ An interactive figure of the same math lives in [`docs/figures/quadratic-voting`
 <p align="center"><img src="docs/images/fig-quadratic-voting.png" width="880" alt="A gauge-block bench: each member's credits are a square plate, so the plate's edge is the vote count. Eleven krill plates laid end to end pass the whale's single plate on the shared ruler."></p>
 <p align="center"><sub>Each plate's area is a member's credits, so its edge is √credits, the votes. Eleven krill plates laid end to end reach 347.850542611 on the ruler and pass a 100 SOL whale at 316.227766016, with about a ninth of the money. Hover to add krill one at a time.</sub></p>
 
-### The honest caveat
+### The catch
 
-Quadratic voting assumes one identity per voter. Nothing on-chain stops a whale from splitting 100 SOL across eleven fresh wallets, and the arena includes a scenario that does exactly that so you can watch it win. Production deployments pair quadratic voting with an identity or stake-lock layer; that layer is out of scope here and the README says so rather than pretending otherwise.
+Quadratic voting assumes one identity per voter. Nothing on-chain stops a whale from splitting 100 SOL across eleven fresh wallets. The arena has a scenario that does exactly that, and the whale wins. A real deployment needs an identity or stake-lock layer on top. I have not built one.
 
 ## Fixed-point square root without floats
 
-Solana programs cannot use `f32`/`f64` in a way that is safe for consensus: every validator must produce bit-identical results, and floating point rounding is not something I want to argue about in an audit. So the square root is pure integer math.
+Solana programs cannot use `f32`/`f64` in a way that is safe for consensus: every validator must produce bit-identical results, and floating point rounding can differ between machines. So the square root is integer math only.
 
 ```rust
 /// Floor square root of a u128. Newton's method seeded from the bit length,
@@ -104,23 +104,23 @@ pub fn votes_for(credits: u64) -> u128 {
 
 I used smart LLMs to help me with this math. Check my work: the three arguments below are short enough to read in a minute, and the tests after them are how I checked it myself.
 
-Why this is safe, in three lines:
+Why it's safe:
 
 - **It terminates.** The seed `2^ceil(bits/2)` is at least √n, and Newton's step from above only ever decreases until it would increase, which is exactly the floor.
 - **It cannot overflow.** The seed is at most 2^64, every later `x` is smaller, and `n / x < 2^64`, so `x + n / x` fits in u128 with 63 bits to spare. For `votes_for`, `credits < 2^64` and `VOTE_SCALE² < 2^60`, so the product is below 2^124.
-- **It rounds the only acceptable way.** Always down, never in the voter's favour.
+- **It rounds down.** A voter never gets more votes than they paid for.
 
-The tests do not take my word for it:
+The tests:
 
 - every `n` from 0 to 2^20 is checked against `r² ≤ n < (r+1)²`;
 - every power of two in u128, ± 1, plus `u64::MAX` and `u128::MAX`;
 - a property test over random u128 inputs, and a monotonicity check;
-- the **concavity property** `votes_for(a) + votes_for(b) ≥ votes_for(a + b)`, which is the formal version of "splitting a budget among more people never loses votes";
+- the **concavity property** `votes_for(a) + votes_for(b) ≥ votes_for(a + b)`, (splitting a budget among more people never loses votes);
 - a guard test that reads the program's own source and fails if `f32` or `f64` ever appears.
 
 ## The state machine
 
-Every proposal walks one path. Each arrow is one instruction, guarded by exactly one state check and one role or time check.
+Each arrow is one instruction. Every instruction checks the current state, and either who is signing or what time it is.
 
 <p align="center"><img src="docs/images/state-machine.png" width="880" alt="Proposal lifecycle: Voting, then finalize to Passed or Rejected, execute to Escrowed, then Completed or Cancelled. Below, each milestone goes Pending, Submitted, Released, with reject returning it to Pending."></p>
 
@@ -133,14 +133,14 @@ Every proposal walks one path. Each arrow is one instruction, guarded by exactly
 | `Escrowed` | `approve_milestone` (last one) | council | `Completed` | all milestones released |
 | `Escrowed` | `cancel_escrow` | council | `Cancelled` | unreleased SOL returns to the treasury |
 
-Quorum is a snapshot: when a proposal is created it records `total_credits × quorum_bps / 10_000`, so later deposits cannot move the goalposts of a vote already in progress.
+Quorum is a snapshot: when a proposal is created it records `total_credits × quorum_bps / 10_000`, so later deposits do not change the quorum of a vote already in progress.
 
 ## Milestone escrow
 
-Think of a vending machine that only has two exits: the tray in front of the contractor, and a return chute back into the treasury. Nobody can open the side panel.
+Escrowed SOL has two ways out: to the contractor when the council approves a milestone, or back to the treasury when the council cancels.
 
 <p align="center"><img src="docs/images/fig-milestone-escrow.png" width="880" alt="A bench-mounted vault with one coin column per milestone, a treasury tank, interlocks between the gates, and a tray for the contractor."></p>
-<p align="center"><sub>Executing a passed proposal moves its SOL from the treasury into the escrow in one step, split into fixed milestone amounts that are released strictly in order. The contractor submits, the council approves exactly that amount to the contractor or rejects it back for rework. Cancelling returns every unreleased lamport to the treasury; the escrow has no other way out. Interactive version in <a href="docs/figures/milestone-escrow">docs/figures/milestone-escrow</a>.</sub></p>
+<p align="center"><sub>Executing a passed proposal moves its SOL from the treasury into the escrow in one step, split into fixed milestone amounts that are released strictly in order. The contractor submits, the council approves exactly that amount to the contractor or rejects it back for rework. Cancelling returns every unreleased lamport to the treasury. Interactive version in <a href="docs/figures/milestone-escrow">docs/figures/milestone-escrow</a>.</sub></p>
 
 | Action | Who | Effect |
 |---|---|---|
@@ -153,13 +153,13 @@ The escrow account holds its own lamports and is owned by the program, so paying
 
 ## Agents as the members: the Arena
 
-Tests prove the rules. The **Arena** shows them being used. It is a cast of autonomous agents, each with its own keypair, that plays the whole lifecycle on a local validator while a live, hand-inked scene draws what the chain says.
+The **Arena** runs the program with agents as the members. Each agent has its own keypair and plays the whole lifecycle on a local validator, while a hand-inked scene draws what the chain says.
 
 <p align="center"><img src="docs/images/arena-run.gif" width="880" alt="A recorded Arena run: the krill and whale figurines vote, chips travel into the root press and vote tokens drop onto the scale, the placard turns PASSED, the vault pays the builder in three milestones"></p>
 <p align="center"><sub>A full run, recorded from the page: deposits, votes, the deadline, finalize, execute, three milestones. About a minute of chain time.</sub></p>
 
 <p align="center"><img src="docs/images/arena-passed.png" width="880" alt="The Krill desk: a hand-inked isometric scene with a treasury jar, a root press, a balance scale reading 347.850 for and 316.227 against, eleven krill figurines, one whale, a milestone vault, and a notepad feed. The placard reads PASSED."></p>
-<p align="center"><sub>The desk after <code>finalize</code>. Every object is driven by on-chain accounts: coins in the jar are <code>pooled_lamports</code>, the scale's pans are the tallies, the placard is <code>proposal.state</code>. The notepad adds the one thing the chain can't say: why each agent voted the way it did.</sub></p>
+<p align="center"><sub>The desk after <code>finalize</code>. Every object is driven by on-chain accounts: coins in the jar are <code>pooled_lamports</code>, the scale's pans are the tallies, the placard is <code>proposal.state</code>. The notepad shows each agent's reasoning, which is not on chain.</sub></p>
 
 ### The cast
 
@@ -179,7 +179,7 @@ Each agent decides through one interface, `decideVote(context) → { side, credi
 | `whale-vs-krill` (default) | the run above: Passed, escrowed, three milestones approved, builder paid exactly 30 SOL |
 | `rework` | the first delivery is `[rushed]` and rejected; resubmitted and approved; skipping ahead to milestone 3 is refused with `MilestoneOutOfOrder` |
 | `cancel` | after one payout the council cancels: 20 SOL returns to the pool and a further submit is refused with `InvalidState` |
-| `sybil-whale` | the whale splits 100 SOL across eleven fresh wallets (9,090 credits each → 1,048.76 votes) and the proposal is **Rejected**. This is the identity caveat, shown rather than footnoted |
+| `sybil-whale` | the whale splits 100 SOL across eleven fresh wallets (9,090 credits each → 1,048.76 votes) and the proposal is **Rejected**. See the catch above |
 
 The terminal transcript of a real run is in [docs/arena-transcript.txt](docs/arena-transcript.txt). Its last lines:
 
@@ -197,15 +197,15 @@ Summary · whale-vs-krill
 <p align="center"><img src="docs/images/arena-completed.png" width="880" alt="The Krill desk after the last milestone: the placard reads COMPLETED, the vault's three drawers are open, the builder's tray holds thirty coins, treasury reads 81 SOL."></p>
 <p align="center"><sub>After the third approval: drawers open, the builder's tray full, 81 SOL left in the jar.</sub></p>
 
-### How the scene stays honest
+### Where the data comes from
 
-The page subscribes to the DAO, proposal, escrow and member accounts over websockets and decodes the program's events. The arena's feed server only supplies the manifest (who is who) and the narrative. If the two ever disagreed, the drawing would follow the chain within one animation. **Run ▸** starts a scenario through the feed; **Replay** replays the recorded snapshots without touching the chain.
+The page subscribes to the DAO, proposal, escrow and member accounts over websockets and decodes the program's events. The arena's feed server only supplies the manifest (who is who) and the narrative. If they disagree, the chain wins. **Run ▸** starts a scenario through the feed; **Replay** replays the recorded snapshots without touching the chain.
 
 The desk is drawn with the Colorfigures engine, which models objects in 3D and inks them with flat shading and a cast shadow; the figurines, the press, the scale and the vault are modelled from the program's state (`app/src/scene`). The notepad is plain HTML in the same paper style.
 
 ### Replay mode
 
-The live demo plays a recorded run. I ran each scenario on a local validator and saved the feed's whole history: every event, each agent's reasoning, the real signatures, and the account snapshot taken after each step. The desk plays that file through the same **Replay** path at 2×, so the figurines, the scale and the vault move as they did on chain. The hosted page never touches a chain: no validator, no RPC, no wallet. `npm run record` records fresh runs into `app/public/runs/`. Locally the desk plays a recording until the arena's feed is up and then switches to live on its own; `?replay=1` or `?run=<scenario>` keeps it on the recording.
+The live demo plays a recorded run. I ran each scenario on a local validator and saved the feed's whole history: every event, each agent's reasoning, the real signatures, and the account snapshot taken after each step. The desk plays that file through the same **Replay** path at 2×, so the figurines, the scale and the vault move as they did on chain. The hosted page does not connect to any chain. `npm run record` records fresh runs into `app/public/runs/`. Locally the desk plays a recording until the arena's feed is up and then switches to live on its own; `?replay=1` or `?run=<scenario>` keeps it on the recording.
 
 ## Account map
 
@@ -237,11 +237,11 @@ npm run capture                     # re-records the README captures and GIF fro
 npm run record                      # re-records the runs the live demo replays (app/public/runs)
 ```
 
-One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but `solana-test-validator` 3.1 does not load yet. The arena detects this from the ELF header and builds the same sources once more with `cargo-build-sbf --arch v0` into a git-ignored folder (about five minutes the first time, incremental after). No program source changes between the two builds.
+One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but `solana-test-validator` 3.1 does not load yet. The arena detects this from the ELF header and builds the same sources once more with `cargo-build-sbf --arch v0` into a git-ignored folder (about five minutes the first time, incremental after). Same source, second build.
 
 ## What the tests prove
 
-103 tests run against the compiled program in-process with LiteSVM, so there is no validator to start and no sleeping: the clock is warped past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
+103 tests run against the compiled program in-process with LiteSVM. No validator to start, no sleeping; the tests set the clock past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
 
 <p align="center"><img src="docs/images/cargo-test.png" width="880" alt="cargo test output: 10 unit tests, 1 compute-unit report, 11 DAO tests, 13 escrow tests, 7 quadratic voting tests, 47 security tests, 14 state machine tests, all passing"></p>
 
@@ -253,7 +253,7 @@ One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but
 | `state_machine` | 14 | every instruction in every wrong state, deadlines at the boundary, quorum snapshot, double execute |
 | `escrow` | 13 | sequential milestones, council-only approve/reject/cancel, exact payouts, completion, refunds |
 | `security` | 47 | one test per attack from the review, plus invariants: DAO balance equals rent plus pool after every instruction, lamports conserved across DAO, escrow and contractor, tallies equal the sum of receipts |
-| `compute_units` | 1 | prints the table below and asserts every instruction stays far under the 200k default |
+| `compute_units` | 1 | prints the table below and asserts every instruction stays under the 200k default |
 
 <p align="center"><img src="docs/images/cargo-test-quadratic.png" width="880" alt="The quadratic voting suite: cannot switch sides, cannot vote with zero credits, cannot spend more than owned, non-members cannot vote, eleven krill outvote one whale, one thousand credits cast 31.622776601 votes, top up applies sqrt to cumulative credits"></p>
 
@@ -267,19 +267,19 @@ The report uses fixed keypairs on purpose. Instructions that create an account (
 
 ### Security review
 
-The program went through a separate adversarial review against a Solana checklist: signer and owner checks, PDA binding, account substitution, re-initialization, arithmetic bounds, lamport accounting versus rent, state-guard completeness, clock assumptions and griefing. The write-up is in [docs/SECURITY.md](docs/SECURITY.md): threat model, ten invariants with code pointers, the findings and the full checklist with a test name for each item. One finding was real and is fixed: a proposal could name a contractor that can never be paid (the DAO itself, the escrow, the system program), which would have stranded the SOL until a cancel. The rest are documented limitations with tests that pin the behaviour.
+The program went through a separate adversarial review against a Solana checklist: signer and owner checks, PDA binding, account substitution, re-initialization, arithmetic bounds, lamport accounting versus rent, state-guard completeness, clock assumptions and griefing. The write-up is in [docs/SECURITY.md](docs/SECURITY.md): threat model, ten invariants with code pointers, the findings and the full checklist with a test name for each item. One real finding, fixed: a proposal could name a contractor that can never be paid (the DAO itself, the escrow, the system program), which would have stranded the SOL until a cancel. The rest are known limitations, each with a test.
 
 <p align="center"><img src="docs/images/cargo-test-security.png" width="880" alt="The 47 security tests, each named after the attack it rules out"></p>
 
 ## Design decisions and trade-offs
 
-- **Native SOL, not SPL tokens.** Fewer accounts per instruction, no token program dependency, and the escrow math is plain lamports. Swapping in an SPL mint is a contained change to `join`, `deposit`, `execute` and `approve_milestone`.
-- **The DAO and escrow accounts hold their own lamports.** Moving funds between program-owned accounts is a balance update, not a CPI, which keeps `execute` and `approve_milestone` small and cheap. The price is discipline: every move goes through one helper that refuses to dip below rent.
-- **Credits are burned, not refunded.** Voting has a cost, which is the point of quadratic voting. Deposited SOL stays in the treasury either way.
-- **A council reviews milestones.** The DAO is the client, and a client needs a hand that can say "this milestone is done". That hand can only pay the contractor or return funds to the treasury. Use a multisig for it; replacing it with a per-milestone vote is the natural next step.
-- **Quorum counts credits, not votes.** Participation is measured in the unit people actually spend, and the threshold is frozen when the proposal is created.
-- **No withdrawals.** Pooled funds are committed to the DAO. Adding a withdraw path means deciding what happens to credits already spent, and that is a governance choice, not a code choice.
-- **One identity per voter is assumed.** See the caveat above; the `sybil-whale` arena scenario makes the limitation visible instead of hiding it.
+- **Native SOL.** Fewer accounts per instruction, no token program dependency, and the escrow math is plain lamports. Swapping in an SPL mint is a contained change to `join`, `deposit`, `execute` and `approve_milestone`.
+- **The DAO and escrow accounts hold their own lamports.** Moving funds between program-owned accounts is a plain balance update with no CPI, which keeps `execute` and `approve_milestone` small and cheap. Every move goes through one helper that refuses to dip below rent.
+- **Credits are burned.** Voting costs something, which is the point of quadratic voting. Deposited SOL stays in the treasury either way.
+- **A council reviews milestones.** Someone has to say a milestone is done. The council can only pay the contractor or return funds to the treasury. Use a multisig for it. A per-milestone vote would be the next step.
+- **Quorum counts credits.** Participation is measured in the unit people spend, and the threshold is frozen when the proposal is created.
+- **No withdrawals.** Pooled funds are committed to the DAO. Adding a withdraw path means deciding what happens to credits already spent, and I have not decided that.
+- **One identity per voter is assumed.** See the catch above. The `sybil-whale` scenario shows it.
 
 ## Project layout
 

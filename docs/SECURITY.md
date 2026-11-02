@@ -1,8 +1,8 @@
 # Krill security review
 
 Internal review of the on-chain program in `programs/krill` (Anchor 1.2.2,
-Solana 3.x crates). It is a starting point for an external audit, not a
-substitute for one. Every claim below points at code (`file:line`, paths
+Solana 3.x crates). This is my own review and has not been audited by a
+third party. Every claim below points at code (`file:line`, paths
 relative to `programs/krill/`) or at a test in
 `programs/krill/tests/security.rs` (unless another file is named).
 
@@ -152,8 +152,8 @@ it mints no credits and no proposal can spend it (`create_proposal` and
 `execute` check the pool, not the balance). The same holds for an escrow. It
 cannot desync bookkeeping in the dangerous direction (pool above balance)
 because only the program can debit these accounts. The surplus is
-effectively burned; that is documented here rather than swept, since a sweep
-instruction would be new attack surface.
+effectively burned. I left it that way: a sweep instruction would be new
+attack surface.
 
 ### K-07: competing proposals and stale passed proposals
 
