@@ -1,0 +1,245 @@
+/* The Krill README hero. Every rule is scoped under .kh.
+   Geometry: an 880 x 420 stage, transparent (the README page is the ground).
+   The browser sits one gutter (32) from the top, runs off the right and the
+   bottom; the terminal sits one gutter from the left and straddles the
+   browser's left edge, its right half over the page's empty margin. */
+.kh {
+  /* The capture is 2x; --s scales its CSS pixels into the window */
+  --s: 0.8527;
+  --paper: #ece9e1;
+  --ink: #2a2621;
+
+  & .ss-stage {
+    --gutter: 32px;
+    overflow: hidden;
+    background: transparent;
+    /* Quiet, warm chrome for a hand-inked product on paper */
+    --ss-chrome: #f8f7f4;
+    --ss-line: rgba(42, 38, 33, 0.1);
+  }
+
+  .kh-scene {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.36s ease;
+  }
+
+  .kh-scene[data-cut] {
+    opacity: 0;
+  }
+
+  /* ---- The browser ---- */
+
+  .kh-browser {
+    position: absolute;
+    top: var(--gutter);
+    left: 181px;
+    width: 760px;
+    height: 540px;
+    box-shadow: var(--ss-shadow-hero);
+  }
+
+  .kh-page {
+    position: relative;
+    flex: 1;
+    background: var(--paper);
+  }
+
+  /* The page capture, cropped before its notepad; the paper carries on past
+     the crop, the seam softened by a short mask */
+  .kh-capture {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(805px * var(--s));
+    height: calc(611px * var(--s));
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 14px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 14px), transparent);
+  }
+
+  .kh-capture img {
+    display: block;
+    width: calc(1204px * var(--s));
+    height: auto;
+    user-select: none;
+  }
+
+  /* A tally: paper over the capture's digits, and a tile of those digits
+     that drops into place when its votes print. Landed, the tile is the
+     capture pixel for pixel. */
+  .kh-tally {
+    position: absolute;
+    left: calc(643px * var(--s));
+    width: calc(149px * var(--s));
+    height: calc(34px * var(--s));
+    background: var(--paper);
+  }
+
+  .kh-tally--for { top: calc(45px * var(--s)); }
+  .kh-tally--against { top: calc(106px * var(--s)); }
+
+  .kh-tally-digits {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-size: calc(1204px * var(--s)) auto;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.25s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .kh-tally--for .kh-tally-digits { background-position: calc(-643px * var(--s)) calc(-45px * var(--s)); }
+  .kh-tally--against .kh-tally-digits { background-position: calc(-643px * var(--s)) calc(-106px * var(--s)); }
+
+  .kh-tally[data-landed] .kh-tally-digits {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Run ▸, as drawn in the capture: the target the cursor presses */
+  .kh-run {
+    position: absolute;
+    left: calc(28px * var(--s));
+    top: calc(56px * var(--s));
+    width: calc(81px * var(--s));
+    height: calc(30px * var(--s));
+    border-radius: 999px;
+    transition: background-color 0.12s ease;
+  }
+
+  .kh-run[data-pressed] {
+    background: rgba(42, 38, 33, 0.1);
+  }
+
+  /* ---- The annotation: one note, one leader to the FOR tally ---- */
+
+  .kh-note {
+    position: absolute;
+    top: 111px;
+    right: 152px;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .kh-note[data-show] {
+    opacity: 1;
+  }
+
+  .kh-note-text {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #fffdf8;
+    box-shadow: 0 0 0 1px rgba(42, 38, 33, 0.14), 0 2px 6px -2px rgba(42, 38, 33, 0.18);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 14px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .kh-leader {
+    position: relative;
+    width: 56px;
+    height: 1.5px;
+    background: rgba(42, 38, 33, 0.5);
+  }
+
+  .kh-leader::after {
+    content: '';
+    position: absolute;
+    right: -2px;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+
+  /* ---- The terminal ---- */
+
+  .kh-term {
+    position: absolute;
+    top: 190px;
+    left: var(--gutter);
+    z-index: 2;
+    width: 288px;
+    height: 300px;
+    --ss-term-bg: #1d1b19;
+    --ss-term-ok: #8fd19e;
+    --ss-term-path: #9aa7c7;
+    --ss-term-sigil: #8fd19e;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), var(--ss-shadow-satellite);
+  }
+
+  .kh-term .ss-term {
+    font-size: 10px;
+    line-height: 16px;
+  }
+
+  /* 150px of rows under a 12px fade, so a line scrolling off the top dims
+     before the edge reaches it */
+  .kh-view {
+    height: 162px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12px);
+    mask-image: linear-gradient(to bottom, transparent, #000 12px);
+  }
+
+  .kh-rows {
+    will-change: transform;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .kh-row {
+    height: 16px;
+    will-change: transform, opacity;
+    white-space: pre;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.3s linear, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .kh-row[data-gap] {
+    margin-top: 6px;
+  }
+
+  .kh-row[data-on] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .kh-row .ss-term__line {
+    white-space: pre;
+  }
+
+  .kh-actor { color: #c9c6c0; }
+  .kh-bright { color: #f3f1ec; }
+  .kh-bright .kh-actor { color: #f3f1ec; }
+  .kh-dim { color: #75716b; }
+
+  .kh-filler {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: 16px;
+  }
+
+  .kh-bar {
+    background: #3d3a36 !important;
+  }
+
+  .kh-bar--faint {
+    background: #322f2c !important;
+  }
+
+  .kh-sig {
+    display: inline-block;
+    vertical-align: 1px;
+    background: #3d3a36 !important;
+  }
+}

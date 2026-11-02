@@ -11,8 +11,8 @@ Quadratic voting with exact integer math, and a milestone escrow that pays contr
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-1b1b19?style=flat-square" alt="MIT"></a>
 </p>
 
-<p align="center"><img src="docs/images/arena-run.gif" width="880" alt="A recorded Arena run: eleven krill figurines and one whale vote on the drawn desk, the scale tips to FOR, the placard turns PASSED, the vault pays the builder in three milestones"></p>
-<p align="center"><sub>Eleven krill agents and one whale agent voting on a real proposal on a local validator. The whale holds nine times their money and still loses.</sub></p>
+<p align="center"><img src="docs/images/hero.png" width="880" alt="The Krill Arena in a browser window: a hand-inked desk where eleven krill figurines and one whale have voted, the big numbers read FOR 347.850 and AGAINST 316.227, and a terminal beside it shows the real transcript lines: the whale voting against with 100,000 credits for 316.227 votes, a krill finalizing the vote, and the summary for 347.850542611 against 316.227766016"></p>
+<p align="center"><sub>Eleven agents holding 1 SOL each out-vote one agent holding 100 SOL, on a real local validator. 11 × √1,000 > √100,000.</sub></p>
 
 ---
 
@@ -149,6 +149,9 @@ The escrow account holds its own lamports and is owned by the program, so paying
 
 Tests prove the rules. The **Arena** shows them being used. It is a cast of autonomous agents, each with its own keypair, that plays the whole lifecycle on a local validator while a live, hand-inked scene draws what the chain says.
 
+<p align="center"><img src="docs/images/arena-run.gif" width="880" alt="A recorded Arena run: the krill and whale figurines vote, chips travel into the root press and vote tokens drop onto the scale, the placard turns PASSED, the vault pays the builder in three milestones"></p>
+<p align="center"><sub>A full run, recorded from the page: deposits, votes, the deadline, finalize, execute, three milestones. About a minute of chain time.</sub></p>
+
 <p align="center"><img src="docs/images/arena-passed.png" width="880" alt="The Krill desk: a hand-inked isometric scene with a treasury jar, a root press, a balance scale reading 347.850 for and 316.227 against, eleven krill figurines, one whale, a milestone vault, and a notepad feed. The placard reads PASSED."></p>
 <p align="center"><sub>The desk after <code>finalize</code>. Every object is driven by on-chain accounts: coins in the jar are <code>pooled_lamports</code>, the scale's pans are the tallies, the placard is <code>proposal.state</code>. The notepad adds the one thing the chain can't say: why each agent voted the way it did.</sub></p>
 
@@ -278,6 +281,7 @@ programs/krill/            the Anchor program
 arena/                     the agents: cast, brains, scenarios, feed server
 app/                       the live hand-inked scene (Vite, vanilla TypeScript)
 docs/figures/              interactive figures and the vendored drawing kits
+docs/hero/                 the README hero composition and its film script
 docs/images/               everything the README shows
 ```
 
@@ -285,6 +289,7 @@ docs/images/               everything the README shows
 
 - [Anatomy](https://github.com/wheresryan22/anatomy) by Ryan (MIT): the isometric drawing kit behind the two figures in `docs/figures/`, vendored at `docs/figures/kit/` with its LICENSE.
 - [Colorfigures](https://april-zhu.com/colorfigures) by April Zhu (MIT): the engine that draws the Arena's desk, vendored at `app/public/colorfigures/` with its LICENSE. It builds on ISO-GLOW by April Zhu and iso-figure by Tolga Cohce (both MIT).
+- [Stageshow](https://github.com/benjitaylor/skills) by Benji Taylor (MIT): the window, terminal and cursor kit used to compose the hero image, vendored at `docs/hero/kit/` with its LICENSE.
 
 ## License
 
