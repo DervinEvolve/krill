@@ -7,6 +7,12 @@ import type { ArenaState } from "./state";
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 const short = (s: string): string => `${s.slice(0, 4)}…${s.slice(-4)}`;
 
+/** The program's page on the Solana explorer: it is deployed and verified on devnet. */
+function explorerLink(programId: string): string {
+  const href = `https://explorer.solana.com/address/${encodeURIComponent(programId)}?cluster=devnet`;
+  return `<a class="np-link" href="${href}" target="_blank" rel="noopener" title="verified build on devnet">${short(programId)}</a> <span class="np-muted">devnet ↗</span>`;
+}
+
 function dot(label: string, live: boolean): string {
   return `<span class="dot${live ? " live" : ""}" title="${label} ${live ? "connected" : "offline"}"></span>${label}`;
 }
@@ -19,7 +25,7 @@ function header(state: ArenaState): string {
   return `<header class="np-head">
     <div class="np-row"><span class="k">scenario</span><span>${esc(m?.scenario ? m.scenario.replace(/-/g, " ") : "no run yet")}${m?.running ? " · running" : ""}</span></div>
     <div class="np-row"><span class="k">cluster</span><span>${esc(m?.cluster ?? "localnet")}</span></div>
-    <div class="np-row"><span class="k">program</span><span>${m ? short(m.programId) : "–"}</span></div>
+    <div class="np-row"><span class="k">program</span><span>${m ? explorerLink(m.programId) : "–"}</span></div>
     ${state.recordedAt === null
       ? `<div class="np-row dots">${dot("rpc", state.status.rpc)}${dot("ws", state.status.ws)}${dot("feed", state.status.feed)}</div>`
       : `<div class="np-row recorded">recorded run · ${day(state.recordedAt)}${state.watching ? " · waiting for the arena" : ""}</div>`}

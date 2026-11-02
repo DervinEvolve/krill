@@ -86,6 +86,22 @@
   min-height: 22px;
 }
 
+.np-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--muted);
+  text-underline-offset: 3px;
+}
+
+.np-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.np-muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .np-head .k {
   flex: 0 0 64px;
   color: var(--muted);
