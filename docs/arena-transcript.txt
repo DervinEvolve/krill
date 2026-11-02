@@ -1,0 +1,91 @@
+Krill Arena
+  program    4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA
+  cluster    http://127.0.0.1:8899 (fresh local validator)
+  feed       http://127.0.0.1:8787
+  brain      scripted
+  speed      600 ms between steps
+
+--- whale-vs-krill: Eleven krill outvote one whale holding 9x their money; the builder is paid in three milestones.
+   0.0s  arena     starts whale-vs-krill
+   0.4s  faucet    airdrops the cast · council 2.0 · whale 101.0 · 11 krill x 1.2 · builder 0.5 SOL  ok
+   1.2s  council   opens the DAO · "krill" · 25 s voting · 10% quorum  ok 3J6u…wy9W
+   2.1s  krill-01  joins · deposits 1.00 SOL → 1,000 credits  ok 2Abp…A1i7
+   3.0s  krill-02  joins · deposits 1.00 SOL → 1,000 credits  ok 45di…Zwd2
+   3.9s  krill-03  joins · deposits 1.00 SOL → 1,000 credits  ok 5bNy…sFNv
+   4.8s  krill-04  joins · deposits 1.00 SOL → 1,000 credits  ok 4GNB…3vhP
+   5.7s  krill-05  joins · deposits 1.00 SOL → 1,000 credits  ok 55r3…89u6
+   6.6s  krill-06  joins · deposits 1.00 SOL → 1,000 credits  ok 2KWp…5eht
+   7.5s  krill-07  joins · deposits 1.00 SOL → 1,000 credits  ok 4xfG…bQhP
+   8.3s  krill-08  joins · deposits 1.00 SOL → 1,000 credits  ok 4w1P…6nDD
+   9.2s  krill-09  joins · deposits 1.00 SOL → 1,000 credits  ok 3AYN…u1J5
+  10.1s  krill-10  joins · deposits 1.00 SOL → 1,000 credits  ok 51ff…A4MM
+  11.0s  krill-11  joins · deposits 1.00 SOL → 1,000 credits  ok 41HP…PML5
+  11.9s  whale     joins · deposits 100.00 SOL → 100,000 credits  ok kusc…iiC3
+  12.8s  krill-01  proposes · "Ship the Krill mobile client" · 30 SOL in 3 milestones · paid to builder  ok 3FZe…4TGB
+  13.6s  krill-01  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 3oH6…UAH2
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  14.5s  krill-02  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 5z7H…CGMy
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  15.4s  krill-03  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok F2N9…6NPT
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  16.3s  krill-04  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 5AnK…f1f6
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  17.2s  krill-05  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 4jd8…Eik3
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  18.1s  krill-06  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok N8hV…5ycS
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  19.0s  krill-07  votes FOR · 400 credits · √400 = 20.000 votes  ok 5zWP…hrDM
+                   "First top-up of 400. Splitting 1,000 as 400 + 600 would give 20.00 + 24.49 if each part were rooted; the program roots my total instead."
+  19.9s  krill-07  votes FOR · 600 credits · √1,000 = 31.622 votes  ok 39kg…TTte
+                   "Second top-up of 600. My receipt now holds 1,000 credits, worth 31.62 votes in total, the same as voting once."
+  20.8s  krill-08  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 3iLD…Uoe6
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  21.7s  krill-09  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 3kPW…M6Vo
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  22.6s  krill-10  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 36Jy…9QAQ
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  23.5s  krill-11  votes FOR · 1,000 credits · √1,000 = 31.622 votes  ok 55Y8…WZBJ
+                   "1,000 credits for: √1,000 = 31.62 votes. Eleven of us outweigh one whale."
+  24.5s  whale     votes AGAINST · 100,000 credits · √100,000 = 316.227 votes  ok jKkq…Q2ND
+                   "Whale: 100,000 credits against. Linear voting would give me 100× a krill's weight; here it is 10×."
+  25.2s  clock     voting closes in 13 s
+  30.2s  clock     voting closes in 8 s
+  34.2s  clock     voting closes in 3 s
+  37.2s  clock     waits out the voting period  ok
+  38.0s  krill-02  finalizes the vote  ok 3WWP…AGbg
+  38.9s  krill-03  executes the proposal · 30 SOL from the treasury into escrow  ok 2aCS…StD3
+  39.8s  builder   submits M1 · M1: wallet connect and login screens  ok 2Gp3…PP5W
+  40.6s  council   approves M1 · 10 SOL to builder  ok 62zt…H1Sb
+                   "Delivery note is complete and untagged; releasing the milestone."
+  41.6s  builder   submits M2 · M2: proposal list and voting flow  ok 2BZS…Jy47
+  42.5s  council   approves M2 · 10 SOL to builder  ok 5tF1…ENBT
+                   "Delivery note is complete and untagged; releasing the milestone."
+  43.4s  builder   submits M3 · M3: store release and crash reporting  ok 3g67…ZDUz
+  44.3s  council   approves M3 · 10 SOL to builder  ok 2dKD…gfsX
+                   "Delivery note is complete and untagged; releasing the milestone."
+
+Summary · whale-vs-krill
+  outcome   Completed
+  for       347.850542611
+  against   316.227766016
+  quorum    111,000 credits spent of 11,100 required
+  escrow    30.000 SOL released, 0.000 SOL returned
+  treasury  81.000 SOL pooled
+  checks    all invariants held
+
+  actor     role        SOL delta  credits          votes  side
+  council   council     -0.001961        -              -  -
+  whale     whale     -100.003093        0  316.227766016  against
+  krill-01  krill       -1.006174        0   31.622776601  for
+  krill-02  krill       -1.003098        0   31.622776601  for
+  krill-03  krill       -1.005311        0   31.622776601  for
+  krill-04  krill       -1.003093        0   31.622776601  for
+  krill-05  krill       -1.003093        0   31.622776601  for
+  krill-06  krill       -1.003093        0   31.622776601  for
+  krill-07  krill       -1.003098        0   31.622776601  for
+  krill-08  krill       -1.003093        0   31.622776601  for
+  krill-09  krill       -1.003093        0   31.622776601  for
+  krill-10  krill       -1.003093        0   31.622776601  for
+  krill-11  krill       -1.003093        0   31.622776601  for
+  builder   builder     29.999985        -              -  -
+  45.0s  arena     finished whale-vs-krill

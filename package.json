@@ -1,0 +1,21 @@
+{
+  "name": "krill-arena",
+  "private": true,
+  "type": "module",
+  "author": "DervinEvolve",
+  "license": "MIT",
+  "workspaces": [
+    "arena",
+    "app"
+  ],
+  "scripts": {
+    "arena": "npm run start -w arena --",
+    "app": "npm run dev -w app",
+    "idl:sync": "cp target/idl/krill.json idl/krill.json && cp target/types/krill.ts idl/krill.ts",
+    "typecheck": "npm run typecheck --workspaces",
+    "capture": "node scripts/capture-arena.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

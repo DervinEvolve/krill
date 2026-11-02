@@ -1,0 +1,26 @@
+{
+  "name": "@krill/app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "author": "DervinEvolve",
+  "license": "MIT",
+  "description": "The Krill desk: a live, hand-inked scene of the DAO on a local validator",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anchor-lang/core": "1.2.2",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.5",
+    "buffer": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

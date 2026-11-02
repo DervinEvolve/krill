@@ -1,0 +1,195 @@
+/* The page around the Colorfigures scene: desk on the left, a ruled notepad clipped beside it. */
+
+:root {
+  --note: #fbf6e3;
+  --rule-line: #d9e3ec;
+  --margin-line: #e9a99d;
+  --red-ink: #d2453a;
+  --hand: "Seravek", "Gill Sans Nova", "Gill Sans", Ubuntu, Calibri, "DejaVu Sans", "Source Sans Pro", sans-serif;
+}
+
+.layout {
+  width: 100%;
+  max-width: 1180px;
+  display: grid;
+  grid-template-columns: minmax(0, 760px) minmax(300px, 360px);
+  gap: 28px;
+  align-items: start;
+  justify-content: center;
+}
+
+.desk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.hovertag rect {
+  filter: drop-shadow(1px 1px 0 rgba(35, 30, 22, 0.35));
+}
+
+.notepad {
+  position: relative;
+  align-self: stretch;
+  min-height: 420px;
+  margin-top: 44px;
+  background-color: var(--note);
+  background-image: linear-gradient(90deg, transparent 29px, var(--margin-line) 29px, var(--margin-line) 30.5px, transparent 30.5px);
+  border: 1.5px solid var(--ink);
+  border-radius: 4px 4px 6px 6px;
+  box-shadow: 3px 4px 0 rgba(35, 30, 22, 0.18);
+  color: var(--ink);
+  font: 13.5px/22px var(--hand);
+}
+
+/* The page scrolls inside the pad so the pad is exactly as tall as the desk beside it. */
+.np-scroll {
+  position: absolute;
+  inset: 24px 14px 14px 40px;
+  overflow: auto;
+  padding-right: 4px;
+  background-image: repeating-linear-gradient(180deg, transparent 0 21px, var(--rule-line) 21px 22px);
+  background-attachment: local;
+}
+
+.notepad::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 92px;
+  height: 22px;
+  margin-left: -46px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: linear-gradient(#d9dcdc, #b8bdbe);
+  box-shadow: 0 2px 0 rgba(35, 30, 22, 0.25);
+}
+
+.notepad h2 {
+  font: 600 11px/22px ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 22px 0 0;
+}
+
+.np-head .np-row {
+  display: flex;
+  gap: 10px;
+  min-height: 22px;
+}
+
+.np-head .k {
+  flex: 0 0 64px;
+  color: var(--muted);
+}
+
+.np-head .event span:last-child {
+  font-size: 12.5px;
+}
+
+.dots {
+  gap: 16px !important;
+  align-items: center;
+  color: var(--muted);
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border: 1.4px solid var(--ink);
+  border-radius: 50%;
+  vertical-align: 0;
+}
+
+.dot.live {
+  background: var(--ink);
+}
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.np-line {
+  padding: 0;
+  word-break: break-word;
+}
+
+.np-line .who {
+  font-weight: 600;
+}
+
+.np-line .detail,
+.np-line .why,
+.np-line.aside {
+  color: var(--muted);
+}
+
+.np-line .why {
+  font-style: italic;
+  padding-left: 12px;
+}
+
+.np-line.refused .what,
+.np-line.refused .detail {
+  color: var(--red-ink);
+  text-decoration: underline wavy var(--red-ink);
+  text-underline-offset: 3px;
+}
+
+.sig {
+  font: 11px/16px ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 0 6px;
+  margin-left: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: copy;
+}
+
+.sig:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.sig.copied {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger th {
+  font-weight: 600;
+  text-align: left;
+  color: var(--muted);
+}
+
+.ledger .n {
+  text-align: right;
+  padding-left: 6px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .notepad {
+    margin-top: 18px;
+    height: 560px;
+  }
+}

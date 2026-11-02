@@ -6,3 +6,9 @@ node_modules
 test-ledger
 .yarn
 .surfpool
+
+# arena and desk
+app/dist
+arena/.ledger
+arena/.program
+arena/.capture
