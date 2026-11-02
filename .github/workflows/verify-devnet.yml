@@ -1,0 +1,212 @@
+name: Verify on devnet
+
+# Builds the program in solana-verify's pinned Docker image, deploys or
+# upgrades it, checks that the on-chain bytes hash to that build, rebuilds it
+# from the public repo at this commit, and updates the README badge.
+# docs/VERIFIED_BUILD.md explains each step and the two secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cluster:
+        description: Cluster to deploy to
+        type: choice
+        options:
+          - devnet
+          - testnet
+        default: devnet
+      submit_remote_verification:
+        description: Rebuild from the public repo with verify-from-repo and write the verify PDA on chain
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify-${{ inputs.cluster }}
+  cancel-in-progress: false
+
+env:
+  AGAVE_VERSION: v3.1.9
+  SOLANA_VERIFY_VERSION: 0.5.2
+  PROGRAM_ID: 4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA
+  CLUSTER: ${{ inputs.cluster }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # verify-from-repo and the badge commit need real history, not a shallow clone.
+          fetch-depth: 0
+
+      - name: Write the keypairs
+        id: keys
+        env:
+          DEVNET_DEPLOYER_KEYPAIR: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
+          KRILL_PROGRAM_KEYPAIR: ${{ secrets.KRILL_PROGRAM_KEYPAIR }}
+        run: |
+          umask 077
+          # Outside the checkout, so the tree stays clean for the dirty-check.
+          KEYS_DIR="$RUNNER_TEMP/keys"
+          echo "KEYS_DIR=$KEYS_DIR" >> "$GITHUB_ENV"
+          mkdir -p "$KEYS_DIR"
+          is_keypair() {
+            jq -e 'type == "array" and length == 64 and all(.[]; type == "number" and . >= 0 and . <= 255)' "$1" >/dev/null 2>&1
+          }
+          if [ -z "$DEVNET_DEPLOYER_KEYPAIR" ]; then
+            echo "::error::The DEVNET_DEPLOYER_KEYPAIR secret is missing. Add it under Settings > Secrets and variables > Actions. Its value is the JSON array of numbers from the deployer's keypair file (solana-keygen new --outfile deployer.json). That key pays the fees and becomes the upgrade authority."
+            exit 1
+          fi
+          printf '%s' "$DEVNET_DEPLOYER_KEYPAIR" > "$KEYS_DIR/deployer.json"
+          if ! is_keypair "$KEYS_DIR/deployer.json"; then
+            echo "::error::DEVNET_DEPLOYER_KEYPAIR is not a keypair file: it must be a JSON array of 64 numbers, the whole content of the .json file."
+            exit 1
+          fi
+          if [ -n "$KRILL_PROGRAM_KEYPAIR" ]; then
+            printf '%s' "$KRILL_PROGRAM_KEYPAIR" > "$KEYS_DIR/program.json"
+            if ! is_keypair "$KEYS_DIR/program.json"; then
+              echo "::error::KRILL_PROGRAM_KEYPAIR is not a keypair file: it must be a JSON array of 64 numbers, the whole content of target/deploy/krill-keypair.json."
+              exit 1
+            fi
+            echo "program_keypair=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "program_keypair=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Agave
+        run: |
+          curl -sSfL "https://github.com/anza-xyz/agave/releases/download/${AGAVE_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" \
+            | tar -xj -C "$HOME"
+          echo "$HOME/solana-release/bin" >> "$GITHUB_PATH"
+
+      - name: Cache solana-verify
+        id: solana-verify-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/solana-verify
+          key: ${{ runner.os }}-solana-verify-${{ env.SOLANA_VERIFY_VERSION }}
+
+      - name: Install solana-verify
+        if: steps.solana-verify-cache.outputs.cache-hit != 'true'
+        run: |
+          root="$HOME/.local/solana-verify"
+          mkdir -p "$root/bin"
+          asset="solana-verify-${SOLANA_VERIFY_VERSION}-linux"
+          base="https://github.com/solana-foundation/solana-verifiable-build/releases/download/v${SOLANA_VERIFY_VERSION}"
+          cd "$RUNNER_TEMP"
+          if curl -sSfL --retry 3 -O "$base/$asset" && curl -sSfL --retry 3 -O "$base/$asset.sha256" \
+            && sha256sum -c "$asset.sha256"; then
+            install -m 755 "$asset" "$root/bin/solana-verify"
+          else
+            echo "::warning::No prebuilt solana-verify ${SOLANA_VERIFY_VERSION} release binary; building it with cargo."
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends pkg-config libudev-dev
+            # Run outside the checkout so the repo's rust-toolchain.toml does not apply.
+            cargo install solana-verify --version "$SOLANA_VERIFY_VERSION" --locked --root "$root"
+          fi
+
+      - name: Show tool versions
+        run: |
+          echo "$HOME/.local/solana-verify/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/solana-verify/bin/solana-verify" --version
+          solana --version
+          docker --version
+
+      - name: Check the program account
+        env:
+          HAS_PROGRAM_KEYPAIR: ${{ steps.keys.outputs.program_keypair }}
+        run: |
+          rpc="https://api.${CLUSTER}.solana.com"
+          if out=$(solana program show "$PROGRAM_ID" -u "$rpc" --output json-compact 2>&1); then
+            echo "The program exists on $CLUSTER; this run upgrades it."
+          elif grep -q 'Unable to find the account' <<<"$out"; then
+            if [ "$HAS_PROGRAM_KEYPAIR" != true ]; then
+              echo "::error::$PROGRAM_ID does not exist on $CLUSTER yet, so this is the first deploy and it needs the KRILL_PROGRAM_KEYPAIR secret: the JSON array from target/deploy/krill-keypair.json, the keypair whose address is $PROGRAM_ID. After the first deploy the secret can be deleted."
+              exit 1
+            fi
+            echo "The program does not exist on $CLUSTER yet; this run is the first deploy."
+          else
+            echo "::error::Could not read the program account on $CLUSTER: $out"
+            exit 1
+          fi
+
+      - name: Build, deploy and verify
+        id: deploy
+        env:
+          REPO_VERIFY: ${{ inputs.submit_remote_verification }}
+        run: |
+          args=(--cluster "$CLUSTER" --deployer "$KEYS_DIR/deployer.json" --program-keypair "$KEYS_DIR/program.json" --yes)
+          if [ "$REPO_VERIFY" != true ]; then
+            args+=(--no-repo-verify)
+          fi
+          scripts/devnet/deploy-and-verify.sh "${args[@]}"
+
+      - name: Commit the badge to main
+        if: inputs.cluster == 'devnet' && github.ref == 'refs/heads/main'
+        env:
+          HASH8: ${{ steps.deploy.outputs.hash8 }}
+          SHORT_SHA: ${{ steps.deploy.outputs.short_sha }}
+        run: |
+          git config user.name DervinEvolve
+          git config user.email 39844362+DervinEvolve@users.noreply.github.com
+          pushed=false
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git checkout -B verified-badge origin/main
+            jq -nc --arg message "verified · ${HASH8} · ${SHORT_SHA}" \
+              '{schemaVersion: 1, label: "devnet", message: $message, color: "brightgreen"}' > docs/verified.json
+            if git diff --quiet -- docs/verified.json; then
+              echo "docs/verified.json already says this; nothing to commit."
+              pushed=true
+              break
+            fi
+            git add docs/verified.json
+            git commit -m "Verified build ${HASH8} on devnet"
+            if git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            echo "Push attempt $attempt failed (main moved?); retrying."
+            sleep $((attempt * 5))
+          done
+          if [ "$pushed" != true ]; then
+            echo "::error::Could not push docs/verified.json to main. If main is protected, allow GitHub Actions to push to it or update the badge by hand."
+            exit 1
+          fi
+
+      - name: Job summary
+        if: always() && steps.deploy.outputs.hash != ''
+        env:
+          HASH: ${{ steps.deploy.outputs.hash }}
+          COMMIT: ${{ steps.deploy.outputs.commit }}
+          DEPLOY_ACTION: ${{ steps.deploy.outputs.deploy_action }}
+          REPO_VERIFY_STATUS: ${{ steps.deploy.outputs.repo_verify }}
+          EXPLORER: ${{ steps.deploy.outputs.explorer }}
+          ON_MAIN: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          {
+            echo "## Krill on ${CLUSTER}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Program | [\`${PROGRAM_ID}\`](${EXPLORER}) |"
+            echo "| Commit | [\`${COMMIT}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${COMMIT}) |"
+            echo "| Executable hash | \`${HASH}\` |"
+            echo "| On-chain hash | matches |"
+            echo "| Deploy | ${DEPLOY_ACTION} |"
+            echo "| verify-from-repo | ${REPO_VERIFY_STATUS} |"
+            echo
+            echo "Explorer: ${EXPLORER}"
+            if [ "$ON_MAIN" != true ] || [ "$CLUSTER" != devnet ]; then
+              echo
+              echo "The README badge only tracks devnet runs from main, so it was not updated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the keypairs
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
