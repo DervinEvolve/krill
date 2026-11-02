@@ -26,7 +26,7 @@ The name comes from that. Most token voting gives you votes in proportion to you
 
 Whales can still join. A whale still outweighs any single small member, just not all of them together.
 
-I do this for fun. I started on Solana because I know its account model best, but nothing here is Solana-specific and I will try other chains eventually.
+I do this for fun. I started on Solana because I know the chain best, but nothing here is Solana-specific and I will try other chains eventually.
 
 ## What it does
 
@@ -197,6 +197,37 @@ Summary · whale-vs-krill
 <p align="center"><img src="docs/images/arena-completed.png" width="880" alt="The Krill desk after the last milestone: the placard reads COMPLETED, the vault's three drawers are open, the builder's tray holds thirty coins, treasury reads 81 SOL."></p>
 <p align="center"><sub>After the third approval: drawers open, the builder's tray full, 81 SOL left in the jar.</sub></p>
 
+### Play along
+
+The agents don't have to play alone. `krill` is the same kind of member in a terminal: it signs with my own keypair and sends the same instructions through the same client the agents use. This is what it says when I start it:
+
+```text
+$ npx krill --help | head -7
+  \\                                ,~~~~~~~~~~~~~~~~~~~~~~~~
+   \\   _.-._.-._.-._.-._.--~~~--./
+  >=(##)##)##)##)##)##)##(####   .  )=~~~~~~~~~~~~~~~~~~~~~~~~~
+   //`-'`-'`-'`-'`-'`-'`-.____.---'
+  //    / / / / / / / ///////
+
+  tiny voters, collectively heavier than any whale
+```
+
+While a run is in its 25 second voting window I can join the arena's DAO and vote with the krill:
+
+```bash
+npm run arena -- --serve                                    # terminal 1: validator and feed
+curl -X POST http://127.0.0.1:8787/run/whale-vs-krill       # terminal 2: start a run
+solana-keygen new --no-bip39-passphrase -so me.json && solana airdrop 2 me.json -u localhost
+export KRILL_DAO=$(curl -s http://127.0.0.1:8787/manifest | jq -r .dao)
+npx krill join 1 --keypair me.json
+npx krill vote 0 1000 --for --keypair me.json
+npx krill status 0                                          # after the agents finalize
+```
+
+<p align="center"><img src="docs/images/cli-play-along.png" width="880" alt="A terminal: the krill banner, then krill joins the arena's DAO with 1 SOL for 1,000 credits, votes for proposal 0 with 1,000 credits for 31.622776601 votes, and krill status 0 shows the proposal Escrowed with 379.473319212 for and 316.227766016 against"></p>
+
+My 1,000 credits buy √1,000 = 31.622776601 votes, the same as any krill, so the vote closes at 379.473319212 for instead of 347.850542611. By the time I ran `status` the agents had already executed the proposal and the first milestone was paid. `npm test -w cli` plays exactly this against a real arena and checks that number on chain. The arena's own checks count only the agents' receipts, so they still pass with a person voting alongside.
+
 ### Where the data comes from
 
 The page subscribes to the DAO, proposal, escrow and member accounts over websockets and decodes the program's events. The arena's feed server only supplies the manifest (who is who) and the narrative. If they disagree, the chain wins. **Run ▸** starts a scenario through the feed; **Replay** replays the recorded snapshots without touching the chain.
@@ -236,6 +267,18 @@ npm run app                         # the desk at http://127.0.0.1:5173, press R
 npm run capture                     # re-records the README captures and GIF from a real run
 npm run record                      # re-records the runs the live demo replays (app/public/runs)
 ```
+
+```bash
+npx krill --help                    # the krill command: every instruction, from a terminal
+npm run krill -- --help             # the same command through the root package script
+npx krill dao init --name club --council <pubkey> --voting-period 600 --quorum-bps 1000
+export KRILL_DAO=<address it prints>
+npx krill join 1                    # 1 SOL → 1,000 credits; then propose, vote, finalize, execute
+npx krill status 0                  # tallies to 9 decimals, quorum, deadline, milestones, escrow
+npm test -w cli                     # the CLI's smoke and play-along tests on local validators (about 2 min)
+```
+
+`krill` signs with `~/.config/solana/id.json` unless I pass `--keypair`, talks to localnet unless I pass `--url` (`devnet` or any RPC URL), and prints one JSON object with `--json`. Each command prints its signature and a one-line result marked 🦐, or `~<` when the output is piped or `NO_COLOR` or `KRILL_PLAIN=1` is set. Program errors come back by name with the program's own message, for example `VotingClosed (6008): Voting on this proposal has ended; call finalize instead`.
 
 One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but `solana-test-validator` 3.1 does not load yet. The arena detects this from the ELF header and builds the same sources once more with `cargo-build-sbf --arch v0` into a git-ignored folder (about five minutes the first time, incremental after). Same source, second build.
 
@@ -290,6 +333,8 @@ programs/krill/            the Anchor program
   src/instructions/        one file per instruction
   tests/                   LiteSVM integration tests, split by concern
 arena/                     the agents: cast, brains, scenarios, feed server
+cli/                       the krill command: a person as a member, next to the agents
+shared/                    the client, PDAs, decoders and math the arena, the desk and the CLI share
 app/                       the live hand-inked scene (Vite, vanilla TypeScript)
 docs/figures/              interactive figures and the vendored drawing kits
 docs/hero/                 the README hero composition and its film script
