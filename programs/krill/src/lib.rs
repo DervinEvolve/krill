@@ -17,6 +17,19 @@ pub use instructions::*;
 
 declare_id!("4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA");
 
+// A security.txt embedded in the program bytes, so explorers and auditors
+// who find the program on chain know where the source is and how to report
+// a vulnerability. The full policy is SECURITY.md at the repo root.
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "Krill",
+    project_url: "https://github.com/DervinEvolve/krill",
+    contacts: "link:https://github.com/DervinEvolve/krill/security/advisories/new",
+    policy: "https://github.com/DervinEvolve/krill/blob/main/SECURITY.md",
+    preferred_languages: "en",
+    source_code: "https://github.com/DervinEvolve/krill"
+}
+
 #[program]
 pub mod krill {
     use super::*;

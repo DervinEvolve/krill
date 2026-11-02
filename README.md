@@ -263,7 +263,7 @@ Prerequisites: Rust stable, the Agave CLI 3.1 (`solana`, `cargo-build-sbf`, `sol
 
 ```bash
 anchor build          # compiles the program and writes target/idl/krill.json
-cargo test            # 103 tests: math unit tests + LiteSVM integration and security suites
+cargo test            # 104 tests: math unit tests + LiteSVM integration and security suites
 ```
 
 ```bash
@@ -295,7 +295,7 @@ The program goes to devnet through a GitHub workflow that builds it with `solana
 
 ## What the tests prove
 
-103 tests run against the compiled program in-process with LiteSVM. No validator to start, no sleeping; the tests set the clock past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
+104 tests run against the compiled program in-process with LiteSVM. No validator to start, no sleeping; the tests set the clock past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
 
 <p align="center"><img src="docs/images/cargo-test.png" width="880" alt="cargo test output: 10 unit tests, 1 compute-unit report, 11 DAO tests, 13 escrow tests, 7 quadratic voting tests, 47 security tests, 14 state machine tests, all passing"></p>
 
@@ -308,6 +308,7 @@ The program goes to devnet through a GitHub workflow that builds it with `solana
 | `escrow` | 13 | sequential milestones, council-only approve/reject/cancel, exact payouts, completion, refunds |
 | `security` | 47 | one test per attack from the review, plus invariants: DAO balance equals rent plus pool after every instruction, lamports conserved across DAO, escrow and contractor, tallies equal the sum of receipts |
 | `compute_units` | 1 | prints the table below and asserts every instruction stays under the 200k default |
+| `security_txt` | 1 | reads the security.txt back out of the built program bytes and checks its contact, policy and source |
 
 <p align="center"><img src="docs/images/cargo-test-quadratic.png" width="880" alt="The quadratic voting suite: cannot switch sides, cannot vote with zero credits, cannot spend more than owned, non-members cannot vote, eleven krill outvote one whale, one thousand credits cast 31.622776601 votes, top up applies sqrt to cumulative credits"></p>
 

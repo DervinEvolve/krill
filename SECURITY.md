@@ -38,3 +38,5 @@ clients in `app/` and `arena/`, and the documented limitations in
 ## Bounty
 
 There is no bug bounty program.
+
+The program also embeds a `security.txt` in its on-chain bytes (the [solana-security-txt](https://github.com/neodyme-labs/solana-security-txt) convention) with the same contact and policy, so explorers show them next to the program.
