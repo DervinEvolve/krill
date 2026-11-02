@@ -274,6 +274,7 @@ limitation) or **n/a**.
 | `overflow-checks = true` in release | ok | `Cargo.toml:12` (workspace) |
 | `mut` only where data or lamports change | ok | read-only: `dao` in `approve_milestone.rs:13` and `reject_milestone.rs:12`, `member` in `create_proposal.rs:24`; `dao` is `mut` where lamports move (`execute.rs:15`, `cancel_escrow.rs:13`) |
 | `declare_id!` matches `Anchor.toml` and the keypair | ok | `src/lib.rs:18`, `Anchor.toml` `[programs.localnet]`, `solana-keygen pubkey target/deploy/krill-keypair.json` all give `4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA` |
+| On-chain `security.txt` with contact, policy and source | ok | `src/lib.rs` (`security_txt!`), read back by `tests/security_txt.rs` |
 | `security.json` and root `SECURITY.md` | fixed (K-10) | `security.json`, `SECURITY.md` |
 
 ## 5. Known limitations

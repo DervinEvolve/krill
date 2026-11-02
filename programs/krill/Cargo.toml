@@ -24,6 +24,8 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "1.2.2", features = ["init-if-needed"] }
+# Embeds a security.txt in the program bytes (contact, policy, source).
+solana-security-txt = "1.1.3"
 
 [dev-dependencies]
 # Cargo.lock pins LiteSVM's Rust-1.89-compatible dependency graph.
@@ -35,6 +37,8 @@ solana-keypair = "3"
 proptest = "1"
 # Decodes `Program data:` event logs in the security tests.
 base64 = "0.21"
+# Reads the embedded security.txt back out of the built program.
+solana-security-txt = { version = "1.1.3", features = ["parser"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
