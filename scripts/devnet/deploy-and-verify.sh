@@ -63,8 +63,8 @@ Options:
                               (default: ${repo_url})
       --no-repo-verify        skip verify-from-repo (the rebuild from the public
                               repo and the verify PDA it writes on chain)
-      --min-sol N             floor for a first deploy; an upgrade only needs its
-                              deploy needs (default: ${min_sol})
+      --min-sol N             SOL floor for a first deploy (default: ${min_sol}); an
+                              upgrade only needs its buffer rent, refunded once it lands
       --write-badge           write docs/verified.json for the README badge
       --allow-dirty           build with uncommitted changes to the program
       --via-rpc               send deploy writes through the RPC instead of validator
