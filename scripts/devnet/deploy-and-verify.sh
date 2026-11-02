@@ -29,6 +29,7 @@ readonly REPO_ROOT
 
 cluster="devnet"
 rpc_url=""
+via_rpc=0
 deployer="${HOME}/.config/solana/id.json"
 program_keypair="${REPO_ROOT}/target/deploy/krill-keypair.json"
 artifact=""
@@ -66,6 +67,8 @@ Options:
                               deploy needs (default: ${min_sol})
       --write-badge           write docs/verified.json for the README badge
       --allow-dirty           build with uncommitted changes to the program
+      --via-rpc               send deploy writes through the RPC instead of validator
+                              TPUs (for a private RPC; the public one rate-limits them)
       --dry-run               print every build, network and on-chain command
                               instead of running it (local git checks still run)
   -y, --yes                   do not ask before deploying
@@ -166,6 +169,7 @@ parse_args() {
       --no-repo-verify) repo_verify=0 && shift ;;
       --write-badge) write_badge=1 && shift ;;
       --allow-dirty) allow_dirty=1 && shift ;;
+      --via-rpc) via_rpc=1 && shift ;;
       --dry-run) dry_run=1 && shift ;;
       -y | --yes) assume_yes=1 && shift ;;
       -h | --help) usage && exit 0 ;;
@@ -362,7 +366,14 @@ deploy() {
   local first_need upgrade_need
   first_need=$(($(rent $((PROGRAMDATA_HEADER + max_len))) + FEE_MARGIN))
   upgrade_need=$(($(rent $((BUFFER_HEADER + artifact_size))) + FEE_MARGIN))
-  local common=(-u "$rpc_url" --keypair "$deployer" --upgrade-authority "$deployer" --use-rpc --max-sign-attempts 20)
+  # Writes go to validator TPUs by default: the public RPC rate-limits the few
+  # hundred write transactions a deploy needs and fails with "Max retries exceeded".
+  local common=(-u "$rpc_url" --keypair "$deployer" --upgrade-authority "$deployer" --max-sign-attempts 20)
+  ((via_rpc)) && common+=(--use-rpc)
+  # A deploy that died mid-way leaves a funded buffer account; reclaim it first.
+  if ((!dry_run)) && [[ $program_state != present || $(solana-verify get-program-hash -u "$rpc_url" "$PROGRAM_ID" 2>/dev/null | only_hash) != "$exe_hash" ]]; then
+    solana program close --buffers -u "$rpc_url" --keypair "$deployer" >/dev/null 2>&1 || true
+  fi
 
   if [[ $program_state != present ]]; then
     ensure_balance "$first_need" "a first deploy with --max-len $max_len"

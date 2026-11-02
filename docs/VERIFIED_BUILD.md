@@ -108,3 +108,7 @@ The two hashes must be equal. `solana-verify verify-from-repo -u devnet --progra
 - **SBPF version.** `anchor build` with Anchor 1.2.2 emits SBPF v3, which Agave 3.1 clusters do not load yet (the same reason the arena rebuilds with `cargo-build-sbf --arch v0`). The verifiable build passes `--arch v0`, so the deployed program is a v0 build. Its hash will never match `target/deploy/krill.so` from a plain `anchor build`; compare only against `solana-verify build --arch v0`. When the clusters accept v3, change `--arch` in the script and the PDA picks it up on the next run.
 - **Pinned versions.** The build image comes from `[workspace.metadata.cli]` in `Cargo.toml`. Changing that number changes the compiler, so the hash changes too. That is expected; run the workflow again.
 - **Badge commits.** The workflow pushes to `main` with the workflow token. If `main` gets branch protection that blocks that, the run still deploys and verifies but the badge step fails; allow GitHub Actions to push or update `docs/verified.json` by hand.
+
+## If the deploy stalls
+
+The public devnet RPC rate-limits the few hundred write transactions a deploy sends, so the script sends them to validator TPUs by default. If a run still fails with "Max retries exceeded", add a private devnet RPC URL as the repository secret `DEVNET_RPC_URL`; the workflow then routes the writes through it (`--via-rpc`). A deploy that dies mid-way leaves a funded buffer account behind; the next run closes it and gets the SOL back before deploying again.

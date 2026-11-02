@@ -28,6 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  DEVNET_RPC_URL: ${{ secrets.DEVNET_RPC_URL }}
   AGAVE_VERSION: v3.1.9
   SOLANA_VERIFY_VERSION: 0.5.2
   PROGRAM_ID: 4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA
@@ -142,6 +143,8 @@ jobs:
           REPO_VERIFY: ${{ inputs.submit_remote_verification }}
         run: |
           args=(--cluster "$CLUSTER" --deployer "$KEYS_DIR/deployer.json" --program-keypair "$KEYS_DIR/program.json" --yes)
+          # An optional private RPC (secret DEVNET_RPC_URL) takes the writes over HTTP; the public one is rate-limited.
+          if [ -n "${DEVNET_RPC_URL:-}" ]; then args+=(--cluster "$DEVNET_RPC_URL" --via-rpc); fi
           if [ "$REPO_VERIFY" != true ]; then
             args+=(--no-repo-verify)
           fi
