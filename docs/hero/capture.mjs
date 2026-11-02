@@ -3,6 +3,9 @@
 //   node capture.mjs <playground-url> png <out.png>        poster still, 2x, transparent
 //   node capture.mjs <playground-url> frames <dir> [fps]   one loop as numbered PNG frames
 //
+// --name <example> picks the playground example (default krill-hero; the CLI
+// showcase in cli/ is staged as krill-cli).
+//
 // Run it from the Stageshow skill folder so playwright-core resolves.
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,12 +14,14 @@ import { createRequire } from 'node:module'
 const require = createRequire(join(process.cwd(), 'package.json'))
 const { chromium } = require('playwright-core')
 
-const [base, mode, out, fpsArg] = process.argv.slice(2)
+const args = process.argv.slice(2)
+const named = args.indexOf('--name')
+const NAME = named >= 0 ? args.splice(named, 2)[1] : 'krill-hero'
+const [base, mode, out, fpsArg] = args
 if (!base || !['png', 'frames'].includes(mode) || !out) {
-  console.error('usage: node capture.mjs <playground-url> png|frames <out> [fps]')
+  console.error('usage: node capture.mjs <playground-url> png|frames <out> [fps] [--name <example>]')
   process.exit(2)
 }
-const NAME = 'krill-hero'
 const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: 'chrome' })
 const page = await browser.newPage({ viewport: { width: 1000, height: 560 }, deviceScaleFactor: 2, reducedMotion: mode === 'png' ? 'reduce' : 'no-preference' })
 const stage = page.locator('.ss-stage').first()

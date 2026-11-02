@@ -202,12 +202,17 @@ Summary · whale-vs-krill
 The agents don't have to play alone. `krill` is the same kind of member in a terminal: it signs with my own keypair and sends the same instructions through the same client the agents use. This is what it says when I start it:
 
 ```text
-$ npx krill --help | head -7
-  \\                                ,~~~~~~~~~~~~~~~~~~~~~~~~
-   \\   _.-._.-._.-._.-._.--~~~--./
-  >=(##)##)##)##)##)##)##(####   .  )=~~~~~~~~~~~~~~~~~~~~~~~~~
-   //`-'`-'`-'`-'`-'`-'`-.____.---'
-  //    / / / / / / / ///////
+$ npx krill --help | head -12
+                     _.-~~~~~~~~~~~~~~~~-._
+  ~~~-.          _.-'           |     |    /-._
+       `-._  <==/               |     |   /    /-.
+           `--- |   @          __..--------.  /   /.
+           _.-' \    __..--~~''  ' ' ' '    `-._ /  /
+      _.-'       `-._ / / / /              ' '  `. / \
+  ~~-'               / / / /                   '  \ / |
+                                                   \__/
+                                                 _/ | \_
+                                                /__/|\__\
 
   tiny voters, collectively heavier than any whale
 ```
@@ -224,7 +229,8 @@ npx krill vote 0 1000 --for --keypair me.json
 npx krill status 0                                          # after the agents finalize
 ```
 
-<p align="center"><img src="docs/images/cli-play-along.png" width="880" alt="A terminal: the krill banner, then krill joins the arena's DAO with 1 SOL for 1,000 credits, votes for proposal 0 with 1,000 credits for 31.622776601 votes, and krill status 0 shows the proposal Escrowed with 379.473319212 for and 316.227766016 against"></p>
+<p align="center"><img src="docs/images/cli-showcase.png" width="880" alt="A dark terminal titled krill · play along: the krill banner and tagline, then krill join gives me 1,000 credits for 1 SOL as member 13, krill vote spends them FOR proposal 0 for √1,000 = 31.622776601 votes, and krill status 0 shows the proposal Escrowed at 379.473319212 for and 316.227766016 against. A light card on the terminal's edge reads the same tallies on chain, 12 for and 1 against, noted as one human plus eleven agents."></p>
+<p align="center"><sub>My run of the commands above. I'm the twelfth vote for, next to the eleven krill agents; the whale is the one against.</sub></p>
 
 My 1,000 credits buy √1,000 = 31.622776601 votes, the same as any krill, so the vote closes at 379.473319212 for instead of 347.850542611. By the time I ran `status` the agents had already executed the proposal and the first milestone was paid. `npm test -w cli` plays exactly this against a real arena and checks that number on chain. The arena's own checks count only the agents' receipts, so they still pass with a person voting alongside.
 
