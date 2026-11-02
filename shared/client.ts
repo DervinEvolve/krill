@@ -3,13 +3,12 @@ import type { Wallet } from "@anchor-lang/core";
 import { Connection, PublicKey, SystemProgram, Transaction, VersionedTransaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import type { Keypair } from "@solana/web3.js";
 import BN from "bn.js";
-import type { Krill } from "../../idl/krill";
-import { daoPda, escrowPda, memberPda, proposalPda, votePda } from "../../shared/pdas";
-import { KRILL_IDL } from "../../shared/program";
-import { decodeDao, decodeEscrow, decodeMember, decodeProposal } from "../../shared/views";
-import type { DaoView, EscrowView, MemberView, ProposalView } from "../../shared/views";
-
-export { votesToNumber } from "../../shared/math";
+import type { Buffer } from "buffer";
+import type { Krill } from "../idl/krill";
+import { daoPda, escrowPda, memberPda, proposalPda, votePda } from "./pdas";
+import { KRILL_IDL } from "./program";
+import { decodeDao, decodeEscrow, decodeMember, decodeProposal, decodeReceipt } from "./views";
+import type { DaoView, EscrowView, MemberView, ProposalView, ReceiptView } from "./views";
 
 /** Addresses a proposal's instructions need. */
 export interface ProposalRef {
@@ -19,7 +18,7 @@ export interface ProposalRef {
 
 const bn = (n: bigint): BN => new BN(n.toString());
 
-/** Signs as one agent's keypair; that agent is also the fee payer. */
+/** Signs as one keypair (an agent's or a person's); that key is also the fee payer. */
 class KeypairWallet implements Wallet {
   constructor(readonly payer: Keypair) {}
 
@@ -41,8 +40,9 @@ const CONFIRMED = { commitment: "confirmed", preflightCommitment: "confirmed" } 
 
 /**
  * A thin typed wrapper over `Program<Krill>`: one method per instruction, each
- * signed and paid for by the agent that acts, returning the signature. All
- * PDAs are passed explicitly from `shared/pdas.ts` (SPEC §3 seeds).
+ * signed and paid for by the member that acts, returning the signature. All
+ * PDAs are passed explicitly from `shared/pdas.ts` (SPEC §3 seeds). The arena's
+ * agents and the `krill` CLI both drive the program through it.
  */
 export class KrillClient {
   private readonly programs = new Map<string, Program<Krill>>();
@@ -167,6 +167,11 @@ export class KrillClient {
 
   async fetchProposal(address: PublicKey): Promise<ProposalView> {
     return decodeProposal(address.toBase58(), await this.data(address));
+  }
+
+  async fetchReceipt(proposal: PublicKey, voter: PublicKey): Promise<ReceiptView> {
+    const address = votePda(proposal, voter);
+    return decodeReceipt(address.toBase58(), await this.data(address));
   }
 
   async fetchEscrow(proposal: PublicKey): Promise<EscrowView> {

@@ -1,0 +1,184 @@
+/* The README's CLI showcase. Every rule is scoped under .kc.
+   Geometry: an 880 x 564 stage, transparent (the README page is the ground).
+   The terminal sits one gutter (32) from the top and the left and runs off
+   the bottom; the "on chain" card straddles its right edge, about half
+   outside, over the terminal's empty right margin. */
+.kc {
+  --ink: #2a2621;
+  --muted: #8a847b;
+
+  & .ss-stage {
+    --gutter: 32px;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* ---- The terminal ---- */
+
+  .kc-term {
+    position: absolute;
+    top: var(--gutter);
+    left: var(--gutter);
+    width: 708px;
+    height: 640px;
+    --ss-term-bg: #1d1b19;
+    --ss-term-path: #9aa7c7;
+    --ss-term-sigil: #8fd19e;
+  }
+
+  .kc-term .ss-term__title {
+    font-size: 12px;
+  }
+
+  .kc-term .ss-term {
+    gap: 0;
+    padding: 10px 24px 0;
+    color: #c9c6c0;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .kc-row {
+    height: 18px;
+    white-space: pre;
+  }
+
+  .kc-row[data-gap] {
+    margin-top: 8px;
+  }
+
+  .kc-row .ss-term__line {
+    white-space: pre;
+  }
+
+  .kc-banner { color: #e6e2da; }
+  .kc-result { color: #c9c6c0; }
+  .kc-bright { color: #f3f1ec; }
+  .kc-dim { color: #75716b; }
+
+  /* The CLI's mark, an emoji, in the mono grid: it takes two cells */
+  .kc-mark {
+    display: inline-block;
+    width: 1.2em;
+    font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    line-height: 18px;
+    text-align: left;
+  }
+
+  /* On the detail rows' grid: three cells in, the key in a ten-cell track,
+     two cells, then the value */
+  .kc-filler {
+    display: grid;
+    grid-template-columns: 12ch auto;
+    align-items: center;
+    height: 18px;
+    padding-left: 3ch;
+  }
+
+  .kc-bar { background: #3d3a36 !important; }
+  .kc-bar--faint { background: #322f2c !important; }
+
+  /* ---- The satellite: the same proposal read off the chain ---- */
+
+  .kc-card {
+    position: absolute;
+    top: 200px;
+    left: 632px;
+    width: 216px;
+    padding: 14px 16px 14px;
+    border-radius: 12px;
+    background: #fffdf8;
+    box-shadow: var(--ss-shadow-satellite);
+    color: var(--ink);
+    font-family: var(--ss-font);
+  }
+
+  .kc-card-title {
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  .kc-tally {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+  }
+
+  .kc-tally-label {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .kc-tally-value {
+    font-family: var(--ss-mono);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The count under a rule, right-aligned with the tallies, so the note's
+     leader lands under "12 for" */
+  .kc-tally--foot {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(42, 38, 33, 0.1);
+  }
+
+  .kc-count {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    white-space: nowrap;
+  }
+
+  /* ---- The annotation: one note, one leader up to the card's count ---- */
+
+  .kc-note {
+    position: absolute;
+    top: 348px;
+    right: var(--gutter);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .kc-leader {
+    position: relative;
+    width: 1.5px;
+    height: 20px;
+    margin-right: var(--leader-x, 96px);
+    background: rgba(42, 38, 33, 0.5);
+  }
+
+  .kc-leader::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+
+  .kc-note-text {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #fffdf8;
+    box-shadow: 0 0 0 1px rgba(42, 38, 33, 0.14), 0 2px 6px -2px rgba(42, 38, 33, 0.18);
+    color: var(--ink);
+    font-family: var(--ss-font);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 14px;
+    white-space: nowrap;
+  }
+}

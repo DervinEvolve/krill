@@ -1,6 +1,6 @@
 import type { PublicKey } from "@solana/web3.js";
+import type { KrillClient } from "../../../shared/client";
 import type { Cast, CastMember } from "../cast";
-import type { KrillClient } from "../client";
 
 /**
  * One narrated on-chain action. `run` sends it and returns the signature (null

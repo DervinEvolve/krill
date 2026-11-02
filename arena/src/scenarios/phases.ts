@@ -1,5 +1,7 @@
 import type { PublicKey } from "@solana/web3.js";
+import type { ProposalRef } from "../../../shared/client";
 import { LAMPORTS_PER_CREDIT } from "../../../shared/constants";
+import { krillErrorName } from "../../../shared/errors";
 import { formatCount, formatSol, formatVotes, votesFor } from "../../../shared/math";
 import { daoPda, escrowPda, proposalPda } from "../../../shared/pdas";
 import type { ProposalStateName, ProposalView } from "../../../shared/views";
@@ -7,9 +9,7 @@ import { brainFor } from "../brains";
 import { reviewMilestone } from "../brains/scripted";
 import type { Brain } from "../brains/types";
 import type { CastMember } from "../cast";
-import type { ProposalRef } from "../client";
 import { DAO_NAME, MILESTONES, PROPOSAL_TITLE, QUORUM_BPS, VOTING_PERIOD_SECONDS } from "../constants";
-import { krillErrorName } from "../errors";
 import { check } from "./types";
 import type { ArenaContext, Step } from "./types";
 

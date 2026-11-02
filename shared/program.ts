@@ -13,5 +13,14 @@ export const krillCoder = new BorshCoder(convertIdlToCamelCase(KRILL_IDL));
 
 export const krillEvents = new EventParser(PROGRAM_ID, krillCoder);
 
+/** A program error as the IDL declares it: `6012`, `MilestoneOutOfOrder`, and the message a person can act on. */
+export interface ProgramErrorInfo {
+  code: number;
+  name: string;
+  message: string;
+}
+
 /** Custom error codes, from the IDL, so failures read as `MilestoneOutOfOrder` rather than 0x177c. */
-export const KRILL_ERRORS: ReadonlyMap<number, string> = new Map(rawIdl.errors.map((e) => [e.code, e.name]));
+export const KRILL_ERRORS: ReadonlyMap<number, ProgramErrorInfo> = new Map(
+  rawIdl.errors.map((e) => [e.code, { code: e.code, name: e.name, message: e.msg }]),
+);

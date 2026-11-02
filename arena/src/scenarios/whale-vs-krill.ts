@@ -1,6 +1,6 @@
 import { formatVotes } from "../../../shared/math";
 import { brainKind } from "../brains";
-import { checkBuilderPaid, closeVoting, deliver, fundEscrow, openDao, propose, vote } from "./phases";
+import { checkBuilderPaid, closeVoting, deliver, fundEscrow, openDao, propose, proposalRef, vote } from "./phases";
 import { check } from "./types";
 import type { ArenaContext, Scenario, Step } from "./types";
 
@@ -14,16 +14,29 @@ export const DELIVERIES = [
   "M3: store release and crash reporting",
 ] as const;
 
+/**
+ * The votes on the cast's own receipts. A person voting alongside the agents
+ * (`krill vote`, see "Play along" in the README) adds to the proposal's
+ * tallies but not to these, so the README's numbers still hold.
+ */
+async function castTally(ctx: ArenaContext): Promise<{ forVotes: bigint; againstVotes: bigint }> {
+  const { proposal } = proposalRef(ctx);
+  const receipts = await Promise.all(ctx.cast.members.map((m) => ctx.client.fetchReceipt(proposal, m.keypair.publicKey)));
+  const sum = (support: boolean): bigint => receipts.filter((r) => r.support === support).reduce((total, r) => total + r.votes, 0n);
+  return { forVotes: sum(true), againstVotes: sum(false) };
+}
+
 /** Opening shared by the first three scenarios: everyone joins, krill vote, the whale votes last, the vote passes, escrow is funded. */
 export async function* passAndEscrow(ctx: ArenaContext): AsyncGenerator<Step, bigint> {
   const { cast, client } = ctx;
   yield* openDao(ctx);
   yield* propose(ctx);
   yield* vote(ctx, [...cast.krill, cast.whale]);
-  const proposal = yield* closeVoting(ctx, cast.krill[1] ?? cast.proposer, "Passed");
+  yield* closeVoting(ctx, cast.krill[1] ?? cast.proposer, "Passed");
   if (brainKind() === "scripted") {
-    check(proposal.forVotes === README_FOR, `for = ${formatVotes(proposal.forVotes)}, expected ${formatVotes(README_FOR)}`);
-    check(proposal.againstVotes === README_AGAINST, `against = ${formatVotes(proposal.againstVotes)}, expected ${formatVotes(README_AGAINST)}`);
+    const tally = await castTally(ctx);
+    check(tally.forVotes === README_FOR, `the cast's for = ${formatVotes(tally.forVotes)}, expected ${formatVotes(README_FOR)}`);
+    check(tally.againstVotes === README_AGAINST, `the cast's against = ${formatVotes(tally.againstVotes)}, expected ${formatVotes(README_AGAINST)}`);
   }
   const builderStart = BigInt(await client.connection.getBalance(cast.builder.keypair.publicKey, "confirmed"));
   yield* fundEscrow(ctx, cast.krill[2] ?? cast.proposer);
