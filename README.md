@@ -14,6 +14,8 @@ Quadratic voting with exact integer math, and a milestone escrow that pays contr
 <p align="center"><img src="docs/images/hero.png" width="880" alt="The Krill Arena in a browser window: a hand-inked desk where eleven krill figurines and one whale have voted, the big numbers read FOR 347.850 and AGAINST 316.227, and a terminal beside it shows the real transcript lines: the whale voting against with 100,000 credits for 316.227 votes, a krill finalizing the vote, and the summary for 347.850542611 against 316.227766016"></p>
 <p align="center"><sub>Eleven agents holding 1 SOL each out-vote one agent holding 100 SOL, on a real local validator. 11 × √1,000 > √100,000.</sub></p>
 
+**Live demo:** https://dervinevolve.github.io/krill/ replays a recorded run of the Arena in your browser, no install needed.
+
 ---
 
 ## Why "Krill"
@@ -201,6 +203,10 @@ The page subscribes to the DAO, proposal, escrow and member accounts over websoc
 
 The desk is drawn with the Colorfigures engine, which models objects in 3D and inks them with flat shading and a cast shadow; the figurines, the press, the scale and the vault are modelled from the program's state (`app/src/scene`). The notepad is plain HTML in the same paper style.
 
+### Replay mode
+
+The live demo plays a recorded run. I ran each scenario on a local validator and saved the feed's whole history: every event, each agent's reasoning, the real signatures, and the account snapshot taken after each step. The desk plays that file through the same **Replay** path at 2×, so the figurines, the scale and the vault move as they did on chain. The hosted page never touches a chain: no validator, no RPC, no wallet. `npm run record` records fresh runs into `app/public/runs/`. Locally the desk plays a recording until the arena's feed is up and then switches to live on its own; `?replay=1` or `?run=<scenario>` keeps it on the recording.
+
 ## Account map
 
 All accounts are PDAs. Seeds are literal byte strings.
@@ -228,6 +234,7 @@ npm run arena                       # local validator + the cast, narrated in th
 npm run arena -- --serve            # keep the validator and feed up, then in another terminal:
 npm run app                         # the desk at http://127.0.0.1:5173, press Run ▸
 npm run capture                     # re-records the README captures and GIF from a real run
+npm run record                      # re-records the runs the live demo replays (app/public/runs)
 ```
 
 One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but `solana-test-validator` 3.1 does not load yet. The arena detects this from the ELF header and builds the same sources once more with `cargo-build-sbf --arch v0` into a git-ignored folder (about five minutes the first time, incremental after). No program source changes between the two builds.

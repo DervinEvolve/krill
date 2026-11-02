@@ -75,6 +75,11 @@
   margin: 22px 0 0;
 }
 
+/* The drawing engine styles every <header> as a wrapping flex row; the notepad's header is a plain stack. */
+.np-head {
+  display: block;
+}
+
 .np-head .np-row {
   display: flex;
   gap: 10px;
@@ -93,6 +98,10 @@
 .dots {
   gap: 16px !important;
   align-items: center;
+  color: var(--muted);
+}
+
+.recorded {
   color: var(--muted);
 }
 

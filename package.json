@@ -13,7 +13,8 @@
     "app": "npm run dev -w app",
     "idl:sync": "cp target/idl/krill.json idl/krill.json && cp target/types/krill.ts idl/krill.ts",
     "typecheck": "npm run typecheck --workspaces",
-    "capture": "node scripts/capture-arena.mjs"
+    "capture": "node scripts/capture-arena.mjs",
+    "record": "node scripts/record-run.mjs"
   },
   "engines": {
     "node": ">=22"

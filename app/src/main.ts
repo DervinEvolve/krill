@@ -1,15 +1,14 @@
 import "./polyfill";
 import "./styles.css";
-import { ChainLink } from "./chain";
-import { FeedLink } from "./feed";
 import { Notepad } from "./notepad";
 import { mountDesk } from "./scene";
+import { Source } from "./source";
 import { Store } from "./state";
 
-/** Mounts the desk (which builds the page shell), clips the notepad beside it, then connects to the arena. */
+/** Mounts the desk (which builds the page shell), clips the notepad beside it, then connects to the arena or plays a recording. */
 const store = new Store();
-const feed = new FeedLink(store);
-mountDesk(store, feed);
+const source = await Source.choose(store);
+mountDesk(store, source);
 
 const layout = document.createElement("div");
 layout.className = "layout";
@@ -26,5 +25,4 @@ const notepad = new Notepad(pad);
 store.subscribe((state) => notepad.update(state));
 notepad.update(store.state);
 
-new ChainLink(store);
-feed.connect();
+source.start();

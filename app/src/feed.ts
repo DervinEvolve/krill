@@ -6,6 +6,15 @@ import type { Store } from "./state";
 /** Result of asking the arena to start a scenario. */
 export type RunRequest = "started" | "busy" | "offline";
 
+/** Whether the arena's feed answers on this machine (it gives up after `ms`). */
+export async function feedReachable(ms: number): Promise<boolean> {
+  try {
+    return (await fetch(`${FEED_URL}/manifest`, { signal: AbortSignal.timeout(ms) })).ok;
+  } catch {
+    return false;
+  }
+}
+
 /** The arena's feed: `/manifest` and the `/events` SSE stream, plus `POST /run/<name>`. */
 export class FeedLink {
   private source: EventSource | null = null;

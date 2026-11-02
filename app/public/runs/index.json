@@ -1,0 +1,22 @@
+[
+  {
+    "name": "whale-vs-krill",
+    "description": "Eleven krill outvote one whale holding 9x their money; the builder is paid in three milestones.",
+    "recordedAt": 1793593424069
+  },
+  {
+    "name": "rework",
+    "description": "A rushed milestone is sent back, an out-of-order submit is refused, then the work finishes in order.",
+    "recordedAt": 1793593485406
+  },
+  {
+    "name": "cancel",
+    "description": "After the first milestone the council cancels; the unpaid 20 SOL returns to the treasury.",
+    "recordedAt": 1793593551129
+  },
+  {
+    "name": "sybil-whale",
+    "description": "The whale splits 100 SOL across 11 fresh wallets and wins: the known limit of quadratic voting.",
+    "recordedAt": 1793593609873
+  }
+]

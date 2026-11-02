@@ -1,6 +1,7 @@
 import { formatVotes } from "../../../shared/math";
 import type { FeedEvent, ScenarioInfo } from "../../../shared/feed";
-import type { FeedLink } from "../feed";
+import type { RecordedRun } from "../recorded";
+import type { Source, SourceMode } from "../source";
 import type { Store } from "../state";
 import { Director } from "./animate";
 import { builder, council, krill, whale } from "./figurines";
@@ -13,18 +14,28 @@ import type { Drawn } from "./view";
 
 /** The Krill desk: one Colorfigures scene driven by chain state, with run and replay buttons. */
 
+/** The chain's clock: `chain` seconds at wall time `wall`, running at `rate` (2 while a replay plays). */
+interface Clock {
+  chain: number;
+  wall: number;
+  rate: number;
+}
+
 interface DeskState {
   pal: PalName;
   frame: Frame;
   hover: string | null;
   replaying: boolean;
   scenarios: ScenarioInfo[];
-  /** Seconds between the chain clock and this machine's clock, from the latest snapshot. */
-  clockSkew: number;
+  /** From the latest snapshot, so the placard's clock reads chain time. */
+  clock: Clock;
 }
 
 const OFFLINE = "start the arena first: npm run arena -- --serve";
 const pretty = (name: string): string => name.replace(/-/g, " ");
+const wallNow = (): number => Date.now() / 1000;
+const clockAt = (chain: number, rate: number): Clock => ({ chain, wall: wallNow(), rate });
+const hintFor = (mode: SourceMode): string => `eleven krill vs one whale · ${mode === "live" ? "live from localnet" : "a recorded localnet run"}`;
 
 function hoverTag(st: DeskState): string {
   const fig = st.hover ? st.frame.model.figures[st.hover] : undefined;
@@ -41,7 +52,7 @@ function krillTop(id: string): V3 {
 
 function drawScene(st: DeskState, m: Pal): string {
   const { model, motion, flyers, sinking, lit } = st.frame;
-  const now = Date.now() / 1000 + st.clockSkew;
+  const now = st.clock.chain + (wallNow() - st.clock.wall) * st.clock.rate;
   const parts: Drawn[] = [
     jar(model.treasury),
     press(m, motion.crank ?? 0, motion.pressing ?? 0, motion.counter ?? null, sinking),
@@ -82,19 +93,21 @@ function lastReasoning(feed: readonly FeedEvent[], id: string): FeedEvent | unde
   return [...feed].reverse().find((e) => e.reasoning && figureOf(e.actor) === id);
 }
 
-export function mountDesk(store: Store, feed: FeedLink): void {
+export function mountDesk(store: Store, source: Source): void {
   const director = new Director(emptyModel());
-  const st: DeskState = { pal: "tomato", frame: director.frame(), hover: null, replaying: false, scenarios: [], clockSkew: 0 };
+  const st: DeskState = { pal: "tomato", frame: director.frame(), hover: null, replaying: false, scenarios: [], clock: clockAt(0, 1) };
   let playing = false;
   /** The run the desk last rested on; a snapshot from another run is drawn as is, not animated. */
   let shownRun = "";
   const runKey = (): string => store.state.manifest?.cast[0]?.pubkey ?? "";
   let replayTimers: ReturnType<typeof setTimeout>[] = [];
+  /** The run on the desk in recorded mode. */
+  let recording: { name: string; run: RecordedRun } | null = null;
 
   const ui = mountFigure<DeskState>({
     fig: "3",
     title: "The Krill desk",
-    hint: "eleven krill vs one whale · live from localnet",
+    hint: hintFor(source.mode),
     size: SIZE,
     palette: "tomato",
     state: st,
@@ -104,6 +117,7 @@ export function mountDesk(store: Store, feed: FeedLink): void {
       {
         label: "Run ▸",
         choices: (s) => {
+          if (source.mode === "recorded") return recordedChoices(s);
           const running = store.state.manifest?.running ?? false;
           if (!store.state.status.feed || !s.scenarios.length) return [{ label: "arena offline", disabled: true, why: OFFLINE, onClick: () => undefined }];
           return s.scenarios.map((sc) => ({
@@ -130,6 +144,8 @@ export function mountDesk(store: Store, feed: FeedLink): void {
       },
     },
   });
+  /** The header line under the title; it changes when the desk turns live. */
+  const hint = document.querySelector<HTMLElement>("body > header > span");
 
   function play(): void {
     st.frame = director.frame();
@@ -143,25 +159,55 @@ export function mountDesk(store: Store, feed: FeedLink): void {
     });
   }
 
+  function recordedChoices(s: DeskState): FigureChoice<DeskState>[] {
+    if (!s.scenarios.length) return [{ label: "no recorded runs", disabled: true, why: "record one with npm run record", onClick: () => undefined }];
+    return s.scenarios.map((sc) => ({ label: pretty(sc.name), current: recording?.name === sc.name, onClick: () => void watch(sc.name) }));
+  }
+
+  async function watch(name: string): Promise<void> {
+    try {
+      const run = await source.shelf.load(name);
+      if (source.mode !== "recorded") return;
+      recording = { name, run };
+      replay();
+    } catch (err) {
+      ui.flash(err instanceof Error ? err.message : String(err), 3200);
+    }
+  }
+
   async function start(name: string): Promise<void> {
-    const res = await feed.run(name);
+    const res = await source.feed.run(name);
     if (res === "offline") ui.flash(OFFLINE, 3200);
     else if (res === "busy") ui.flash("a run is already in progress");
   }
 
+  /**
+   * Plays a run's snapshots again at 2x. Live, that is the feed's history (the
+   * notepad already lists it); recorded, the notepad fills with each event as it plays.
+   */
   function replay(): void {
-    const recorded = store.state.feed.filter((e) => e.snapshot);
-    const first = recorded[0];
+    const history = recording ? recording.run.events : store.state.feed.filter((e) => e.snapshot);
+    const first = history[0];
     if (store.state.manifest?.running) return ui.flash("wait for the run to finish, then replay it");
     if (!first) return ui.flash("nothing recorded yet: run a scenario first");
     replayTimers.forEach(clearTimeout);
+    if (recording) store.loadRecording(recording.run.manifest, first.t);
     st.replaying = true;
     director.reset(emptyModel());
     const manifest = store.state.manifest;
-    replayTimers = recorded.map((e, i) =>
+    const fromFile = recording !== null;
+    replayTimers = history.map((e, i) =>
       setTimeout(() => {
-        director.advance(deriveModel(manifest, e.snapshot ?? null));
-        if (i === recorded.length - 1) st.replaying = false;
+        if (fromFile) store.addFeedEvent(e, false);
+        if (e.snapshot) {
+          if (e.snapshot.chainTime) st.clock = clockAt(e.snapshot.chainTime, 2);
+          if (fromFile) store.setSnapshot(e.snapshot);
+          director.advance(deriveModel(manifest, e.snapshot));
+        }
+        if (i === history.length - 1) {
+          st.replaying = false;
+          if (fromFile) ui.flash("that was a recorded run · press Replay to watch it again", 5000);
+        }
         play();
       }, (e.t - first.t) / 2),
     );
@@ -175,7 +221,7 @@ export function mountDesk(store: Store, feed: FeedLink): void {
       play();
     }
     if (change === "snapshot" && state.snapshot && !st.replaying) {
-      if (state.snapshot.chainTime) st.clockSkew = state.snapshot.chainTime - Date.now() / 1000;
+      if (state.snapshot.chainTime) st.clock = clockAt(state.snapshot.chainTime, 1);
       const model = deriveModel(state.manifest, state.snapshot);
       if (runKey() === shownRun) director.advance(model);
       else {
@@ -184,7 +230,7 @@ export function mountDesk(store: Store, feed: FeedLink): void {
       }
       play();
     }
-    if (change === "status" && state.status.feed && !st.scenarios.length) void feed.scenarios().then((list) => (st.scenarios = list));
+    if (source.mode === "live" && change === "status" && state.status.feed && !st.scenarios.length) void source.feed.scenarios().then((list) => (st.scenarios = list));
   });
 
   const svg = document.getElementById("fig");
@@ -204,4 +250,24 @@ export function mountDesk(store: Store, feed: FeedLink): void {
   setInterval(() => {
     if (!playing && st.frame.model.proposal?.state === "Voting") ui.render();
   }, 500);
+
+  /** The arena came up: drop the recording and its timers; the live scenarios load once the feed connects. */
+  source.onChange(() => {
+    replayTimers.forEach(clearTimeout);
+    replayTimers = [];
+    recording = null;
+    st.replaying = false;
+    st.scenarios = [];
+    director.reset(emptyModel());
+    if (hint) hint.textContent = hintFor(source.mode);
+    ui.flash("arena connected");
+    play();
+  });
+
+  if (source.mode === "recorded") {
+    void source.shelf.list().then((list) => {
+      if (source.mode === "recorded") st.scenarios = list;
+    });
+    void watch(source.first);
+  }
 }

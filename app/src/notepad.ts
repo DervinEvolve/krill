@@ -11,6 +11,8 @@ function dot(label: string, live: boolean): string {
   return `<span class="dot${live ? " live" : ""}" title="${label} ${live ? "connected" : "offline"}"></span>${label}`;
 }
 
+const day = (t: number): string => new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
 function header(state: ArenaState): string {
   const m = state.manifest;
   const last = state.chainEvents[state.chainEvents.length - 1];
@@ -18,7 +20,9 @@ function header(state: ArenaState): string {
     <div class="np-row"><span class="k">scenario</span><span>${esc(m?.scenario ? m.scenario.replace(/-/g, " ") : "no run yet")}${m?.running ? " · running" : ""}</span></div>
     <div class="np-row"><span class="k">cluster</span><span>${esc(m?.cluster ?? "localnet")}</span></div>
     <div class="np-row"><span class="k">program</span><span>${m ? short(m.programId) : "–"}</span></div>
-    <div class="np-row dots">${dot("rpc", state.status.rpc)}${dot("ws", state.status.ws)}${dot("feed", state.status.feed)}</div>
+    ${state.recordedAt === null
+      ? `<div class="np-row dots">${dot("rpc", state.status.rpc)}${dot("ws", state.status.ws)}${dot("feed", state.status.feed)}</div>`
+      : `<div class="np-row recorded">recorded run · ${day(state.recordedAt)}${state.watching ? " · waiting for the arena" : ""}</div>`}
     ${last ? `<div class="np-row event"><span class="k">on chain</span><span>${esc(last.text)}</span></div>` : ""}
   </header>`;
 }

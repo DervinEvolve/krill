@@ -21,6 +21,10 @@ export interface ArenaState {
   feed: FeedEvent[];
   chainEvents: ChainEvent[];
   status: LinkStatus;
+  /** When the run on the desk was recorded, in replay-from-file mode; null when live. */
+  recordedAt: number | null;
+  /** Recorded on this machine while the desk polls for the arena; false once live, and on a hosted page. */
+  watching: boolean;
 }
 
 type Listener = (state: ArenaState, change: Change) => void;
@@ -34,6 +38,8 @@ export class Store {
     feed: [],
     chainEvents: [],
     status: { rpc: false, ws: false, feed: false },
+    recordedAt: null,
+    watching: false,
   };
   private readonly listeners: Listener[] = [];
 
@@ -47,6 +53,33 @@ export class Store {
 
   setManifest(manifest: Manifest): void {
     this.state.manifest = manifest;
+    this.emit("manifest");
+  }
+
+  /** Clears the desk for a recorded run; its events and snapshots then arrive as the replay plays them. */
+  loadRecording(manifest: Manifest, recordedAt: number): void {
+    this.state.manifest = manifest;
+    this.state.recordedAt = recordedAt;
+    this.state.snapshot = null;
+    this.state.feed = [];
+    this.state.chainEvents = [];
+    this.emit("manifest");
+  }
+
+  watchForArena(): void {
+    this.state.watching = true;
+    this.emit("status");
+  }
+
+  /** Clears the recording off the desk for a fresh live session; the arena's manifest and events then arrive over the feed. */
+  startLive(): void {
+    this.state.manifest = null;
+    this.state.snapshot = null;
+    this.state.feed = [];
+    this.state.chainEvents = [];
+    this.state.status = { rpc: false, ws: false, feed: false };
+    this.state.recordedAt = null;
+    this.state.watching = false;
     this.emit("manifest");
   }
 

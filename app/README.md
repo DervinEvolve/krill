@@ -15,6 +15,13 @@ Press **Run ▸** and pick a scenario. **Replay** plays the last run again at 2�
 from the snapshots the feed recorded, without touching the chain. Hover a
 figurine for its side and votes; click it for its reasoning.
 
+Without the arena (or with `?replay=1` / `?run=<scenario>`) the desk plays a
+recorded run from `public/runs/` instead (`npm run record` at the repo root
+writes them), and **Run ▸** picks among the recordings. Locally it keeps
+watching, and once the arena is up the desk switches to live on its own.
+Served from anywhere but this machine, as on GitHub Pages, it never looks for
+the arena.
+
 ## What you are looking at
 
 | on the desk | on chain |
@@ -34,7 +41,9 @@ figurine for its side and votes; click it for its reasoning.
   (`onAccountChange`) and to the program's logs (`onLogs` with Anchor's
   `EventParser`); each change re-reads one snapshot of all accounts.
 - `src/feed.ts` reads `/manifest`, `/scenarios` and the `/events` stream, and
-  posts `/run/<name>`.
+  posts `/run/<name>`. `src/recorded.ts` fetches the recorded runs instead.
+  `src/source.ts` decides between the two and turns the desk live when the
+  arena comes up.
 - `src/state.ts` holds one plain state object; `src/notepad.ts` renders the
   ruled notepad (feed, newest first, and a ledger of every agent).
 - `src/scene/` reduces the snapshot to a `SceneModel` (`model.ts`), turns each
@@ -42,7 +51,8 @@ figurine for its side and votes; click it for its reasoning.
   and draws the desk (`objects.ts`, `vault.ts`, `figurines.ts`, `parts.ts`,
   laid out in `layout.ts`).
 
-`npm run typecheck` checks the package; `npm run build` writes `dist/`.
+`npm run typecheck` checks the package; `npm run build` writes `dist/`
+(`VITE_BASE=/krill/ npm run build` for GitHub Pages).
 
 ## Third-party notices
 
