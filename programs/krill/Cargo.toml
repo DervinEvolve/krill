@@ -33,6 +33,8 @@ solana-transaction = "4"
 solana-signer = "3"
 solana-keypair = "3"
 proptest = "1"
+# Decodes `Program data:` event logs in the security tests.
+base64 = "0.21"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

@@ -10,9 +10,10 @@
 
 use anchor_lang::{
     prelude::Clock,
-    solana_program::{instruction::Instruction, system_program},
-    AccountDeserialize, InstructionData, ToAccountMetas,
+    solana_program::{instruction::Instruction, system_instruction, system_program},
+    AccountDeserialize, AnchorDeserialize, Discriminator, Event, InstructionData, ToAccountMetas,
 };
+use base64::Engine;
 use krill::{
     constants::{DAO_SEED, ESCROW_SEED, MEMBER_SEED, PROPOSAL_SEED, VOTE_SEED},
     state::{Dao, Escrow, Member, Proposal, VoteReceipt},
@@ -82,7 +83,9 @@ pub mod ix {
     use super::*;
     use krill::{accounts, instruction};
 
-    fn build(data: impl InstructionData, accounts: impl ToAccountMetas) -> Instruction {
+    /// Any Krill instruction from Anchor's generated `instruction` and
+    /// `accounts` structs, for tests that hand-pick (or forge) the accounts.
+    pub fn build(data: impl InstructionData, accounts: impl ToAccountMetas) -> Instruction {
         Instruction::new_with_bytes(krill::ID, &data.data(), accounts.to_account_metas(None))
     }
 
@@ -283,7 +286,12 @@ impl KrillTestEnv {
     /// Fresh chain with the program loaded but no DAO yet; `dao` points at the
     /// address the default DAO would have.
     pub fn without_dao() -> Self {
-        let mut svm = LiteSVM::new();
+        Self::on(LiteSVM::new())
+    }
+
+    /// Like `without_dao`, on a caller-built chain (for example one with a
+    /// different feature set).
+    pub fn on(mut svm: LiteSVM) -> Self {
         let program = include_bytes!(concat!(env!("CARGO_TARGET_TMPDIR"), "/../deploy/krill.so"));
         svm.add_program(krill::ID, program)
             .expect("krill.so loads; run `anchor build` first");
@@ -307,6 +315,16 @@ impl KrillTestEnv {
         send_tx(&mut self.svm, ixs, signers)
     }
 
+    /// Sends `ixs` signed (and paid) by the DAO authority.
+    pub fn send_as_authority(&mut self, ixs: &[Instruction]) -> TxResult {
+        send_tx(&mut self.svm, ixs, &[&self.authority])
+    }
+
+    /// Sends `ixs` signed (and paid) by the DAO council.
+    pub fn send_as_council(&mut self, ixs: &[Instruction]) -> TxResult {
+        send_tx(&mut self.svm, ixs, &[&self.council])
+    }
+
     /// A new keypair holding `lamports`.
     pub fn funded_keypair(&mut self, lamports: u64) -> Keypair {
         let keypair = Keypair::new();
@@ -314,6 +332,22 @@ impl KrillTestEnv {
             .airdrop(&keypair.pubkey(), lamports)
             .expect("airdrop to new keypair");
         keypair
+    }
+
+    /// Plain system transfer of `lamports` from `from` (who also pays the fee).
+    pub fn transfer(&mut self, from: &Keypair, to: &Pubkey, lamports: u64) -> TxResult {
+        let ix = system_instruction::transfer(&from.pubkey(), to, lamports);
+        self.send(&[ix], &[from])
+    }
+
+    /// Overwrites the balance of an existing account, bypassing every program.
+    /// Only for proving what the runtime does if bookkeeping ever drifted.
+    pub fn set_lamports(&mut self, address: &Pubkey, lamports: u64) {
+        let mut account = self.svm.get_account(address).expect("account exists");
+        account.lamports = lamports;
+        self.svm
+            .set_account(*address, account)
+            .expect("account is writable");
     }
 
     /// Moves the on-chain clock forward by `seconds`.
@@ -539,6 +573,20 @@ fn send_tx(svm: &mut LiteSVM, ixs: &[Instruction], signers: &[&Keypair]) -> TxRe
     let tx = VersionedTransaction::try_new(VersionedMessage::Legacy(message), signers)
         .expect("every required signer is provided");
     svm.send_transaction(tx)
+}
+
+/// Every event of type `E` that a successful transaction emitted, decoded
+/// from its `Program data:` log lines.
+pub fn events<E: Event + Discriminator + AnchorDeserialize>(meta: &TransactionMetadata) -> Vec<E> {
+    meta.logs
+        .iter()
+        .filter_map(|line| line.strip_prefix("Program data: "))
+        .filter_map(|data| base64::engine::general_purpose::STANDARD.decode(data).ok())
+        .filter_map(|bytes| {
+            let body = bytes.strip_prefix(E::DISCRIMINATOR)?;
+            E::try_from_slice(body).ok()
+        })
+        .collect()
 }
 
 fn custom_error_code(result: &TxResult) -> Option<u32> {

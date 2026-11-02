@@ -36,6 +36,10 @@ pub fn handle_initialize_dao(
     voting_period: i64,
     quorum_bps: u16,
 ) -> Result<()> {
+    // A name over 32 bytes never gets here: it is a PDA seed, and the runtime
+    // aborts address derivation for an over-long seed before the handler runs
+    // (see `dao_name_longer_than_a_seed_is_refused_before_any_state_is_written`).
+    // This check is what rejects the empty name, and states the rule in one place.
     require!(
         !name.is_empty() && name.len() <= usize::from(MAX_NAME_LEN),
         KrillError::NameTooLong

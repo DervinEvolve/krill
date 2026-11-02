@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 
 use crate::{
-    constants::{DAO_SEED, MAX_MILESTONES, MAX_TITLE_LEN, MEMBER_SEED, PROPOSAL_SEED},
+    constants::{DAO_SEED, ESCROW_SEED, MAX_MILESTONES, MAX_TITLE_LEN, MEMBER_SEED, PROPOSAL_SEED},
     errors::KrillError,
     events::ProposalCreated,
     state::{Dao, Member, Proposal, ProposalState},
@@ -58,6 +58,12 @@ pub fn handle_create_proposal(
         .iter()
         .try_fold(0u64, |sum, &m| sum.checked_add(m))
         .ok_or(KrillError::Overflow)?;
+    // Invariant: the contractor can sign submissions and receive payouts.
+    require_payable_contractor(
+        &contractor,
+        &ctx.accounts.dao.key(),
+        &ctx.accounts.proposal.key(),
+    )?;
 
     let dao = &mut ctx.accounts.dao;
     require!(
@@ -92,5 +98,21 @@ pub fn handle_create_proposal(
         index: proposal.index,
         amount,
     });
+    Ok(())
+}
+
+/// Refuses contractors that could never be paid: Krill's own DAO, proposal
+/// and escrow accounts (program-owned, and Krill never signs for them) and
+/// the system or Krill program ids. Such a proposal could still pass a vote,
+/// burning every credit spent on it, and then sit in escrow until the council
+/// cancelled it. Other unsignable keys cannot be detected on-chain; the
+/// council's cancel is the recovery path for those.
+fn require_payable_contractor(contractor: &Pubkey, dao: &Pubkey, proposal: &Pubkey) -> Result<()> {
+    let (escrow, _) = Pubkey::find_program_address(&[ESCROW_SEED, proposal.as_ref()], &crate::ID);
+    let unpayable = [*dao, *proposal, escrow, system_program::ID, crate::ID];
+    require!(
+        !unpayable.contains(contractor),
+        KrillError::InvalidContractor
+    );
     Ok(())
 }

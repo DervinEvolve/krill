@@ -1,28 +1,15 @@
 {
   "name": "krill",
-  "logo": "https://solana.com/src/img/branding/solanaLogoMark.png",
-  "description": "A fresh Anchor program!",
-  "notification": "Remember to review and publish this metadata with `anchor program deploy --security-metadata` once the contents are accurate.",
-  "sdk": "https://github.com/your-sdk",
-  "project_url": "https://github.com/your-project/",
+  "description": "Quadratic-voting DAO treasury with milestone escrow, in native SOL",
+  "project_url": "https://github.com/DervinEvolve/krill",
   "contacts": [
-    "email:security@example.com",
-    "discord:MyProgram#1234",
-    "twitter:@MyProgram"
+    "link:https://github.com/DervinEvolve/krill/security/advisories/new"
   ],
-  "policy": "https://example.com/security-policy",
+  "policy": "https://github.com/DervinEvolve/krill/blob/main/SECURITY.md",
   "preferred_languages": [
-    "en",
-    "de"
+    "en"
   ],
-  "encryption": "https://example.com/pgp-key",
-  "source_code": "https://github.com/your-source-code/",
+  "source_code": "https://github.com/DervinEvolve/krill",
   "source_release": "v0.1.0",
-  "source_revision": "abc123def456",
-  "auditors": [
-    "Audit Firm A",
-    "Security Researcher B"
-  ],
-  "acknowledgements": "https://example.com/security-acknowledgements",
   "version": "0.1.0"
 }

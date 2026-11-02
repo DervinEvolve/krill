@@ -35,4 +35,8 @@ pub enum KrillError {
     MilestoneIndexOutOfRange,
     #[msg("Arithmetic overflow; the amounts involved are unrealistically large")]
     Overflow,
+    #[msg(
+        "Contractor must be a wallet that can sign and receive SOL, not a Krill account or program"
+    )]
+    InvalidContractor,
 }
