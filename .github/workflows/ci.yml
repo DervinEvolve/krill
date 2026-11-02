@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  AGAVE_VERSION: v3.1.9
+  ANCHOR_VERSION: 1.2.2
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Show Rust toolchain
+        # rust-toolchain.toml pins the exact version; rustup installs it here.
+        run: rustup show active-toolchain
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache cargo and Solana platform tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            ~/.cache/solana
+            target
+          key: ${{ runner.os }}-agave-${{ env.AGAVE_VERSION }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-agave-${{ env.AGAVE_VERSION }}-
+
+      - name: Install Agave
+        run: |
+          curl -sSfL "https://github.com/anza-xyz/agave/releases/download/${AGAVE_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" \
+            | tar -xj -C "$HOME"
+          echo "$HOME/solana-release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI
+        run: npm i -g "@anchor-lang/cli@${ANCHOR_VERSION}"
+
+      - name: Create a local wallet
+        run: solana-keygen new --no-bip39-passphrase --silent --outfile ~/.config/solana/id.json
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Build program
+        # The program keypair lives in the ignored target/ directory, so a fresh
+        # checkout gets a random one; declare_id! is the source of truth.
+        run: anchor build --ignore-keys
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test
