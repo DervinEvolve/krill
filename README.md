@@ -5,6 +5,7 @@ Quadratic voting with exact integer math, and a milestone escrow that pays contr
 
 <p align="center">
   <a href="https://github.com/DervinEvolve/krill/actions/workflows/ci.yml"><img src="https://github.com/DervinEvolve/krill/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="docs/VERIFIED_BUILD.md"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FDervinEvolve%2Fkrill%2Fmain%2Fdocs%2Fverified.json&style=flat-square" alt="verified build on devnet"></a>
   <img src="https://img.shields.io/badge/Anchor-1.2.2-1b1b19?style=flat-square" alt="Anchor 1.2.2">
   <img src="https://img.shields.io/badge/Solana-3.1-1b1b19?style=flat-square" alt="Solana 3.1">
   <img src="https://img.shields.io/badge/floats_on--chain-0-1b1b19?style=flat-square" alt="zero floats on-chain">
@@ -239,6 +240,10 @@ npm run record                      # re-records the runs the live demo replays 
 
 One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but `solana-test-validator` 3.1 does not load yet. The arena detects this from the ELF header and builds the same sources once more with `cargo-build-sbf --arch v0` into a git-ignored folder (about five minutes the first time, incremental after). Same source, second build.
 
+### Verified build on devnet
+
+The program goes to devnet through a GitHub workflow that builds it with `solana-verify` in a pinned Docker image (Agave 3.1.9, SBPF v0). The workflow fails unless the hash of the program on chain equals the hash of that build. It then rebuilds the public repo at the same commit and records the result on chain. The badge at the top shows the last verified hash and commit, and the program is on the [explorer](https://explorer.solana.com/address/4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA?cluster=devnet). [docs/VERIFIED_BUILD.md](docs/VERIFIED_BUILD.md) has the steps, the two secrets it needs, and how to check the hash yourself.
+
 ## What the tests prove
 
 103 tests run against the compiled program in-process with LiteSVM. No validator to start, no sleeping; the tests set the clock past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
@@ -291,6 +296,7 @@ programs/krill/            the Anchor program
   tests/                   LiteSVM integration tests, split by concern
 arena/                     the agents: cast, brains, scenarios, feed server
 app/                       the live hand-inked scene (Vite, vanilla TypeScript)
+scripts/devnet/            verifiable build, devnet deploy and hash check
 docs/figures/              interactive figures and the vendored drawing kits
 docs/hero/                 the README hero composition and its film script
 docs/images/               everything the README shows
