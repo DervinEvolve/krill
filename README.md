@@ -164,7 +164,7 @@ Tests prove the rules. The **Arena** shows them being used. It is a cast of auto
 | `builder` | contractor | 0.5 SOL | submits three milestones for "Ship the Krill mobile client" (30 SOL) |
 | `council` | reviewer | 2 SOL | approves clean milestones, rejects any delivery note tagged `[rushed]` |
 
-Each agent decides through one interface, `decideVote(context) → { side, credits, reasoning }`. The default brains are scripted, so every run reproduces the numbers above to nine decimals and the runner asserts them. An optional model-backed brain (`KRILL_BRAIN=llm` plus an API key) reads the proposal and the persona and decides for itself; it falls back to the scripted choice on any error.
+Each agent decides through one interface, `decideVote(context) → { side, credits, reasoning }`. The default brains are scripted, so every run reproduces the numbers above to nine decimals and the runner asserts them. An optional model-backed brain (`KRILL_BRAIN=llm` with `KRILL_LLM_URL`, `KRILL_LLM_MODEL` and, if needed, `KRILL_LLM_API_KEY` pointing at any chat-completions-compatible server, hosted or local) reads the proposal and the persona and decides for itself; it falls back to the scripted choice on any error.
 
 ### Scenarios
 
