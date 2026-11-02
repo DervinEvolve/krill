@@ -63,7 +63,7 @@ Options:
                               (default: ${repo_url})
       --no-repo-verify        skip verify-from-repo (the rebuild from the public
                               repo and the verify PDA it writes on chain)
-      --min-sol N             top up below this balance, never less than the
+      --min-sol N             floor for a first deploy; an upgrade only needs its
                               deploy needs (default: ${min_sol})
       --write-badge           write docs/verified.json for the README badge
       --allow-dirty           build with uncommitted changes to the program
@@ -282,7 +282,10 @@ balance() {
 
 # ensure_balance NEED_LAMPORTS WHAT: airdrops on test clusters, otherwise stops.
 ensure_balance() {
-  local need=$1 what=$2 floor=$((min_sol * LAMPORTS_PER_SOL)) have tries=0
+  local need=$1 what=$2 floor=0 have tries=0
+  # The --min-sol floor covers a first deploy (program rent plus headroom); an
+  # upgrade only needs its buffer rent, which comes back once it lands.
+  [[ $program_state == present ]] || floor=$((min_sol * LAMPORTS_PER_SOL))
   ((need > floor)) || need=$floor
   # A deploy that died mid-way leaves a funded buffer account; reclaim it before counting.
   ((dry_run)) || solana program close --buffers -u "$rpc_url" --keypair "$deployer" >/dev/null 2>&1 || true
