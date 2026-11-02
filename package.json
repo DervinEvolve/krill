@@ -16,6 +16,7 @@
     "idl:sync": "cp target/idl/krill.json idl/krill.json && cp target/types/krill.ts idl/krill.ts",
     "typecheck": "npm run typecheck --workspaces",
     "capture": "node scripts/capture-arena.mjs",
+    "capture:figures": "node scripts/capture-figures.mjs",
     "record": "node scripts/record-run.mjs"
   },
   "engines": {

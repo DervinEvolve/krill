@@ -67,7 +67,7 @@ Two rules keep this from being gamed:
 
 An interactive figure of the same math lives in [`docs/figures/quadratic-voting`](docs/figures/quadratic-voting) (open the HTML file):
 
-<p align="center"><img src="docs/images/fig-quadratic-voting.png" width="880" alt="A gauge-block bench: each member's credits are a square plate, so the plate's edge is the vote count. Eleven krill plates laid end to end pass the whale's single plate on the shared ruler."></p>
+<p align="center"><img src="docs/images/fig-quadratic-voting.gif" width="880" alt="A gauge-block bench: each member's credits are a square plate, so the plate's edge is the vote count. Eleven krill plates laid end to end pass the whale's single plate on the shared ruler."></p>
 <p align="center"><sub>Each plate's area is a member's credits, so its edge is √credits, the votes. Eleven krill plates laid end to end reach 347.850542611 on the ruler and pass a 100 SOL whale at 316.227766016, with about a ninth of the money. Hover to add krill one at a time.</sub></p>
 
 ### The catch
@@ -140,7 +140,7 @@ Quorum is a snapshot: when a proposal is created it records `total_credits × qu
 
 Escrowed SOL has two ways out: to the contractor when the council approves a milestone, or back to the treasury when the council cancels.
 
-<p align="center"><img src="docs/images/fig-milestone-escrow.png" width="880" alt="A bench-mounted vault with one coin column per milestone, a treasury tank, interlocks between the gates, and a tray for the contractor."></p>
+<p align="center"><img src="docs/images/fig-milestone-escrow.gif" width="880" alt="A bench-mounted vault with one coin column per milestone, a treasury tank, interlocks between the gates, and a tray for the contractor."></p>
 <p align="center"><sub>Executing a passed proposal moves its SOL from the treasury into the escrow in one step, split into fixed milestone amounts that are released strictly in order. The contractor submits, the council approves exactly that amount to the contractor or rejects it back for rework. Cancelling returns every unreleased lamport to the treasury. Interactive version in <a href="docs/figures/milestone-escrow">docs/figures/milestone-escrow</a>.</sub></p>
 
 | Action | Who | Effect |
