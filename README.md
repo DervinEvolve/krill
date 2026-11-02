@@ -24,6 +24,8 @@ That is the whole idea of this project. In most token-voting systems, a "whale" 
 
 The name is a reminder of who the system is for. It does not hunt whales; a whale can still join and still carries more weight than any single small member. It just can't carry unlimited weight.
 
+I do this for fun. Solana is where I started because its account model and compute budget make the trade-offs explicit, but the ideas here (quadratic voting, integer square roots, milestone escrow) are not Solana-specific, and I will try other chains eventually.
+
 ## What it does
 
 1. **Members pool SOL** into a DAO treasury and receive *voice credits* (1 credit per 0.001 SOL).
@@ -97,6 +99,8 @@ pub fn votes_for(credits: u64) -> u128 {
     isqrt(u128::from(credits) * VOTE_SCALE * VOTE_SCALE)
 }
 ```
+
+I used smart LLMs to help me with this math. Check my work: the three arguments below are short enough to read in a minute, and the tests after them are how I checked it myself.
 
 Why this is safe, in three lines:
 
