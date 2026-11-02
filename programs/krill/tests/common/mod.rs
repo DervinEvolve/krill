@@ -267,6 +267,12 @@ pub struct PassedProposal {
 
 /// LiteSVM with the Krill program loaded, a funded DAO authority and council,
 /// and (unless built with `without_dao`) a DAO already initialized.
+/// A keypair derived from one byte, for tests whose numbers must not move
+/// between runs (PDA bumps, and with them compute units, depend on the keys).
+pub fn seeded_keypair(seed: u8) -> Keypair {
+    Keypair::new_from_array([seed; 32])
+}
+
 pub struct KrillTestEnv {
     pub svm: LiteSVM,
     pub authority: Keypair,
@@ -291,12 +297,16 @@ impl KrillTestEnv {
 
     /// Like `without_dao`, on a caller-built chain (for example one with a
     /// different feature set).
-    pub fn on(mut svm: LiteSVM) -> Self {
+    pub fn on(svm: LiteSVM) -> Self {
+        Self::on_with_keys(svm, Keypair::new(), Keypair::new())
+    }
+
+    /// Like `on`, with caller-chosen authority and council keys. Fixed keys
+    /// pin every PDA bump, which makes compute-unit measurements repeatable.
+    pub fn on_with_keys(mut svm: LiteSVM, authority: Keypair, council: Keypair) -> Self {
         let program = include_bytes!(concat!(env!("CARGO_TARGET_TMPDIR"), "/../deploy/krill.so"));
         svm.add_program(krill::ID, program)
             .expect("krill.so loads; run `anchor build` first");
-        let authority = Keypair::new();
-        let council = Keypair::new();
         for wallet in [&authority, &council] {
             svm.airdrop(&wallet.pubkey(), 10 * LAMPORTS_PER_SOL)
                 .expect("airdrop to fixture wallet");
@@ -327,10 +337,14 @@ impl KrillTestEnv {
 
     /// A new keypair holding `lamports`.
     pub fn funded_keypair(&mut self, lamports: u64) -> Keypair {
-        let keypair = Keypair::new();
+        self.fund(Keypair::new(), lamports)
+    }
+
+    /// Airdrops `lamports` to `keypair` and hands it back.
+    pub fn fund(&mut self, keypair: Keypair, lamports: u64) -> Keypair {
         self.svm
             .airdrop(&keypair.pubkey(), lamports)
-            .expect("airdrop to new keypair");
+            .expect("airdrop to keypair");
         keypair
     }
 

@@ -5,6 +5,7 @@
 mod common;
 
 use common::*;
+use litesvm::LiteSVM;
 
 /// Solana's default per-instruction compute budget.
 const DEFAULT_CU_LIMIT: u64 = 200_000;
@@ -38,18 +39,19 @@ impl CuReport {
 
 #[test]
 fn report_compute_units() {
-    let mut env = KrillTestEnv::without_dao();
+    // Fixed keys pin every PDA bump, so the numbers below are repeatable.
+    let mut env = KrillTestEnv::on_with_keys(LiteSVM::new(), seeded_keypair(1), seeded_keypair(2));
     let mut report = CuReport::default();
 
     report.record(
         "initialize_dao",
         env.initialize_dao(DAO_NAME, VOTING_PERIOD, QUORUM_BPS),
     );
-    let member = env.funded_keypair(3 * LAMPORTS_PER_SOL);
+    let member = env.fund(seeded_keypair(3), 3 * LAMPORTS_PER_SOL);
     report.record("join", env.join(&member, LAMPORTS_PER_SOL));
     report.record("deposit", env.deposit(&member, LAMPORTS_PER_SOL));
 
-    let contractor = env.funded_keypair(LAMPORTS_PER_SOL);
+    let contractor = env.fund(seeded_keypair(4), LAMPORTS_PER_SOL);
     let milestones = [LAMPORTS_PER_SOL / 2, LAMPORTS_PER_SOL / 2];
     let (proposal, created) = env.create_proposal(&member, &contractor.pubkey(), &milestones);
     report.record("create_proposal", created);
