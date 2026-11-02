@@ -121,7 +121,9 @@ jobs:
           HAS_PROGRAM_KEYPAIR: ${{ steps.keys.outputs.program_keypair }}
         run: |
           rpc="https://api.${CLUSTER}.solana.com"
-          if out=$(solana program show "$PROGRAM_ID" -u "$rpc" --output json-compact 2>&1); then
+          # The CLI wants a default signer even for read-only lookups on a bare runner.
+          solana config set --url "$rpc" --keypair "$KEYS_DIR/deployer.json" >/dev/null
+          if out=$(solana program show "$PROGRAM_ID" -u "$rpc" --keypair "$KEYS_DIR/deployer.json" --output json-compact 2>&1); then
             echo "The program exists on $CLUSTER; this run upgrades it."
           elif grep -q 'Unable to find the account' <<<"$out"; then
             if [ "$HAS_PROGRAM_KEYPAIR" != true ]; then

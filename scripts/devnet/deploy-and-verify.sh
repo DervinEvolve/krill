@@ -228,10 +228,10 @@ check_git() {
 read_program_state() {
   program_state=unknown
   program_authority=""
-  show solana program show "$PROGRAM_ID" -u "$rpc_url" --output json-compact
+  show solana program show "$PROGRAM_ID" -u "$rpc_url" --keypair "$deployer" --output json-compact
   ((dry_run)) && return 0
   local out
-  if out=$(solana program show "$PROGRAM_ID" -u "$rpc_url" --output json-compact 2>&1); then
+  if out=$(solana program show "$PROGRAM_ID" -u "$rpc_url" --keypair "$deployer" --output json-compact 2>&1); then
     program_state=present
     program_authority=$(sed -n 's/.*"authority":"\([^"]*\)".*/\1/p' <<<"$out")
   elif grep -q 'Unable to find the account' <<<"$out"; then
