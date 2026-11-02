@@ -1,0 +1,23 @@
+/** The krill banner for `krill` and `krill --help`, and the one-glyph mark on result lines. */
+
+const TAGLINE = "tiny voters, collectively heavier than any whale";
+
+/** Facing right: fan tail, segmented abdomen with swimmerets, the carapace with its eye and legs, two antennae. */
+const BANNER = [
+  "  \\\\                                ,~~~~~~~~~~~~~~~~~~~~~~~~",
+  "   \\\\   _.-._.-._.-._.-._.--~~~--./",
+  "  >=(##)##)##)##)##)##)##(####   .  )=~~~~~~~~~~~~~~~~~~~~~~~~~",
+  "   //`-'`-'`-'`-'`-'`-'`-.____.---'",
+  "  //    / / / / / / / ///////",
+];
+
+export const banner = (): string => [...BANNER, "", `  ${TAGLINE}`].join("\n");
+
+/**
+ * Plain output: no glyphs or colour when `NO_COLOR` or `KRILL_PLAIN=1` is set,
+ * or when stdout is a pipe or a file.
+ */
+export const isPlain = (env: NodeJS.ProcessEnv, tty: boolean): boolean => !tty || Boolean(env.NO_COLOR) || env.KRILL_PLAIN === "1";
+
+/** Prefix of a command's result line. */
+export const mark = (plain: boolean): string => (plain ? "~<" : "🦐");

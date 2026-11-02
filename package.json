@@ -6,11 +6,13 @@
   "license": "MIT",
   "workspaces": [
     "arena",
-    "app"
+    "app",
+    "cli"
   ],
   "scripts": {
     "arena": "npm run start -w arena --",
     "app": "npm run dev -w app",
+    "krill": "node cli/bin/krill.mjs",
     "idl:sync": "cp target/idl/krill.json idl/krill.json && cp target/types/krill.ts idl/krill.ts",
     "typecheck": "npm run typecheck --workspaces",
     "capture": "node scripts/capture-arena.mjs",
