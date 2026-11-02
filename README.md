@@ -297,7 +297,7 @@ The program goes to devnet through a GitHub workflow that builds it with `solana
 
 104 tests run against the compiled program in-process with LiteSVM. No validator to start, no sleeping; the tests set the clock past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
 
-<p align="center"><img src="docs/images/cargo-test.png" width="880" alt="cargo test output: 10 unit tests, 1 compute-unit report, 11 DAO tests, 13 escrow tests, 7 quadratic voting tests, 47 security tests, 14 state machine tests, all passing"></p>
+<p align="center"><img src="docs/images/cargo-test.png" width="880" alt="cargo test output: 10 unit tests, 1 compute-unit report, 11 DAO tests, 13 escrow tests, 7 quadratic voting tests, 47 security tests, 1 security.txt test, 14 state machine tests, all passing"></p>
 
 | Suite | Tests | What it covers |
 |---|---|---|
