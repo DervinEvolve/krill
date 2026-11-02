@@ -2,13 +2,18 @@
 
 const TAGLINE = "tiny voters, collectively heavier than any whale";
 
-/** Facing right: fan tail, segmented abdomen with swimmerets, the carapace with its eye and legs, two antennae. */
+/** Facing left: antennae and rostrum, the carapace with its eye and legs, a curved abdomen of plates with swimmerets, and the tail fan. */
 const BANNER = [
-  "  \\\\                                ,~~~~~~~~~~~~~~~~~~~~~~~~",
-  "   \\\\   _.-._.-._.-._.-._.--~~~--./",
-  "  >=(##)##)##)##)##)##)##(####   .  )=~~~~~~~~~~~~~~~~~~~~~~~~~",
-  "   //`-'`-'`-'`-'`-'`-'`-.____.---'",
-  "  //    / / / / / / / ///////",
+  "                     _.-~~~~~~~~~~~~~~~~-._",
+  "  ~~~-.          _.-'           |     |    /-._",
+  "       `-._  <==/               |     |   /    /-.",
+  "           `--- |   @          __..--------.  /   /.",
+  "           _.-' \\    __..--~~''  ' ' ' '    `-._ /  /",
+  "      _.-'       `-._ / / / /              ' '  `. / \\",
+  "  ~~-'               / / / /                   '  \\ / |",
+  "                                                   \\__/",
+  "                                                 _/ | \\_",
+  "                                                /__/|\\__\\",
 ];
 
 export const banner = (): string => [...BANNER, "", `  ${TAGLINE}`].join("\n");
