@@ -218,3 +218,10 @@
     height: 560px;
   }
 }
+
+/* The engine's footer holds its own credit on the right; the star link sits on the left. */
+footer.made-with {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
