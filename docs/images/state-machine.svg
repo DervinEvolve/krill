@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="800" viewBox="0 0 1400 800" role="img" aria-labelledby="t d">
+  <title id="t">Krill proposal and milestone state machine</title>
+  <desc id="d">A proposal moves from Voting to Passed or Rejected via finalize, from Passed to Escrowed via execute, and from Escrowed to Completed when the council approves the last milestone, or to Cancelled via cancel_escrow. Inside Escrowed, each milestone moves Pending to Submitted (contractor) to Released (council), and the council can reject a submission back to Pending. Milestones are sequential.</desc>
+  <defs>
+    <marker id="ah-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0.5 L10,5 L0,9.5 z" fill="#2a78d6"/>
+    </marker>
+    <marker id="ah-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0.5 L10,5 L0,9.5 z" fill="#c4554d"/>
+    </marker>
+    <marker id="ah-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0.5 L10,5 L0,9.5 z" fill="#8c959f"/>
+    </marker>
+    <style>
+      .sans { font-family: Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+      .mono { font-family: "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace; }
+      .title { font-size: 24px; font-weight: 600; fill: #24292f; }
+      .sub { font-size: 15px; fill: #57606a; }
+      .state { font-size: 18px; font-weight: 600; fill: #24292f; }
+      .state-inv { font-size: 18px; font-weight: 600; fill: #ffffff; }
+      .ix { font-size: 14px; font-weight: 500; fill: #24292f; }
+      .actor { font-size: 13px; fill: #57606a; }
+      .note { font-size: 12.5px; fill: #6e7781; }
+      .lane { font-size: 17px; font-weight: 600; fill: #24292f; }
+      .lane-sub { font-size: 14px; font-weight: 400; fill: #57606a; }
+      .happy { fill: none; stroke: #2a78d6; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .sad { fill: none; stroke: #c4554d; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .entry { fill: none; stroke: #8c959f; stroke-width: 2; stroke-linecap: round; }
+      .box { fill: #ffffff; stroke: #2a78d6; stroke-width: 2; }
+      .box-end { fill: #2a78d6; stroke: #2a78d6; stroke-width: 2; }
+      .box-sad { fill: #fbeeed; stroke: #c4554d; stroke-width: 2; }
+      .box-neutral { fill: #ffffff; stroke: #8c959f; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0.5" y="0.5" width="1399" height="799" rx="16" fill="#fcfcfb" stroke="#e4e4df"/>
+
+  <!-- heading -->
+  <text class="sans title" x="40" y="58">Proposal lifecycle</text>
+  <text class="sans sub" x="40" y="86">Each arrow is one instruction, labelled with who may sign it.</text>
+
+  <!-- ============ Lane 1: proposal ============ -->
+
+  <!-- entry: create_proposal -->
+  <circle cx="40" cy="210" r="7" fill="#57606a"/>
+  <path class="entry" d="M50,210 H187" marker-end="url(#ah-grey)"/>
+  <text class="mono ix" x="119" y="176" text-anchor="middle">create_proposal</text>
+  <text class="sans actor" x="119" y="196" text-anchor="middle">member</text>
+
+  <!-- Voting -->
+  <rect class="box" x="190" y="180" width="150" height="60" rx="10"/>
+  <text class="sans state" x="265" y="216" text-anchor="middle">Voting</text>
+
+  <!-- finalize: Voting -> Passed / Rejected -->
+  <path class="happy" d="M342,210 H557" marker-end="url(#ah-blue)"/>
+  <path class="sad" d="M372,210 V318 Q372,330 384,330 H557" marker-end="url(#ah-red)"/>
+  <circle cx="372" cy="210" r="4" fill="#2a78d6"/>
+  <text class="mono ix" x="465" y="176" text-anchor="middle">finalize</text>
+  <text class="sans actor" x="465" y="196" text-anchor="middle">anyone, after deadline</text>
+  <text class="sans note" x="466" y="232" text-anchor="middle">quorum met, for &gt; against</text>
+  <text class="sans note" x="466" y="320" text-anchor="middle">no quorum, or for ≤ against</text>
+
+  <!-- Passed -->
+  <rect class="box" x="560" y="180" width="150" height="60" rx="10"/>
+  <text class="sans state" x="635" y="216" text-anchor="middle">Passed</text>
+
+  <!-- Rejected -->
+  <rect class="box-sad" x="560" y="300" width="150" height="60" rx="10"/>
+  <text class="sans state" x="635" y="336" text-anchor="middle">Rejected</text>
+
+  <!-- execute: Passed -> Escrowed -->
+  <path class="happy" d="M712,210 H897" marker-end="url(#ah-blue)"/>
+  <text class="mono ix" x="805" y="176" text-anchor="middle">execute</text>
+  <text class="sans actor" x="805" y="196" text-anchor="middle">anyone</text>
+  <text class="sans note" x="805" y="232" text-anchor="middle">locks amount in escrow</text>
+
+  <!-- Escrowed -->
+  <rect class="box" x="900" y="180" width="150" height="60" rx="10"/>
+  <text class="sans state" x="975" y="216" text-anchor="middle">Escrowed</text>
+
+  <!-- Escrowed -> Completed / Cancelled -->
+  <path class="happy" d="M1052,210 H1217" marker-end="url(#ah-blue)"/>
+  <path class="sad" d="M1082,210 V318 Q1082,330 1094,330 H1217" marker-end="url(#ah-red)"/>
+  <circle cx="1082" cy="210" r="4" fill="#2a78d6"/>
+  <text class="mono ix" x="1136" y="176" text-anchor="middle">approve_milestone</text>
+  <text class="sans actor" x="1136" y="196" text-anchor="middle">council, last milestone</text>
+  <text class="mono ix" x="1152" y="296" text-anchor="middle">cancel_escrow</text>
+  <text class="sans actor" x="1152" y="316" text-anchor="middle">council</text>
+
+  <!-- Completed -->
+  <rect class="box-end" x="1220" y="180" width="150" height="60" rx="10"/>
+  <text class="sans state-inv" x="1295" y="216" text-anchor="middle">Completed</text>
+  <text class="sans note" x="1295" y="262" text-anchor="middle">all milestones Released</text>
+
+  <!-- Cancelled -->
+  <rect class="box-sad" x="1220" y="300" width="150" height="60" rx="10"/>
+  <text class="sans state" x="1295" y="336" text-anchor="middle">Cancelled</text>
+  <text class="sans note" x="1370" y="382" text-anchor="end">unreleased SOL back to pool</text>
+
+  <!-- link Escrowed -> milestone lane -->
+  <path d="M975,242 V448" fill="none" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="4 5"/>
+  <text class="sans note" x="963" y="420" text-anchor="end">while Escrowed</text>
+
+  <!-- ============ Lane 2: one milestone ============ -->
+  <rect x="40" y="450" width="1330" height="318" rx="14" fill="#f3f4f1"/>
+  <text class="sans lane" x="68" y="488">Milestone i<tspan class="lane-sub" dx="10">one per milestone, up to 8 per escrow</tspan></text>
+  <text class="sans sub" x="68" y="514">milestones are sequential: i may move only when i−1 is Released</text>
+
+  <!-- entry -->
+  <circle cx="110" cy="615" r="7" fill="#57606a"/>
+  <path class="entry" d="M120,615 H247" marker-end="url(#ah-grey)"/>
+  <text class="sans note" x="183" y="638" text-anchor="middle">created by execute</text>
+
+  <!-- Pending -->
+  <rect class="box-neutral" x="250" y="585" width="150" height="60" rx="10"/>
+  <text class="sans state" x="325" y="621" text-anchor="middle">Pending</text>
+
+  <!-- submit -->
+  <path class="happy" d="M402,615 H637" marker-end="url(#ah-blue)"/>
+  <text class="mono ix" x="520" y="581" text-anchor="middle">submit_milestone</text>
+  <text class="sans actor" x="520" y="601" text-anchor="middle">contractor</text>
+
+  <!-- Submitted -->
+  <rect class="box" x="640" y="585" width="150" height="60" rx="10"/>
+  <text class="sans state" x="715" y="621" text-anchor="middle">Submitted</text>
+
+  <!-- approve -->
+  <path class="happy" d="M792,615 H1027" marker-end="url(#ah-blue)"/>
+  <text class="mono ix" x="910" y="581" text-anchor="middle">approve_milestone</text>
+  <text class="sans actor" x="910" y="601" text-anchor="middle">council, pays contractor</text>
+
+  <!-- Released -->
+  <rect class="box-end" x="1030" y="585" width="150" height="60" rx="10"/>
+  <text class="sans state-inv" x="1105" y="621" text-anchor="middle">Released</text>
+
+  <!-- reject: Submitted -> Pending -->
+  <path class="sad" d="M705,647 C705,712 335,712 335,650" marker-end="url(#ah-red)"/>
+  <text class="mono ix" x="520" y="726" text-anchor="middle">reject_milestone</text>
+  <text class="sans actor" x="520" y="746" text-anchor="middle">council, back to Pending</text>
+</svg>
