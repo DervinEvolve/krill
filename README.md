@@ -27,7 +27,7 @@ The name comes from that. Most token voting gives you votes in proportion to you
 
 Whales can still join. A whale still outweighs any single small member, just not all of them together.
 
-I do this for fun. I started on Solana because I know the chain best. The ideas here (square-root votes, milestone escrow, the state machine) would work on any chain. The code would not: it is Anchor through and through, lol. I will try other chains eventually, and that will mean a rewrite, not a port.
+I do this for fun. I started on Solana because I know the chain best. The ideas here (square-root votes, milestone escrow, the state machine) would work on any chain. The code would not: it is Anchor through and through, lol. I will try other chains eventuallyy
 
 ## What it does
 
