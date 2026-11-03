@@ -27,7 +27,7 @@ The name comes from that. Most token voting gives you votes in proportion to you
 
 Whales can still join. A whale still outweighs any single small member, just not all of them together.
 
-I do this for fun. I started on Solana because I know the chain best, but nothing here is Solana-specific and I will try other chains eventually.
+I do this for fun. I started on Solana because I know the chain best. The ideas here (square-root votes, milestone escrow, the state machine) would work on any chain. The code would not: it is Anchor through and through, lol. I will try other chains eventually, and that will mean a rewrite, not a port.
 
 ## What it does
 
@@ -60,7 +60,7 @@ A member who deposits 1 SOL holds 1,000 credits. Spending all of them buys √1,
 
 <p align="center"><img src="docs/images/quadratic-curve.png" width="880" alt="Votes grow with the square root of credits: eleven krill with 1,000 credits each reach 347.9 votes, one whale with 100,000 credits reaches 316.2"></p>
 
-Two rules keep this from being gamed:
+Two rules close the obvious ways to game it (the less obvious one is in the next section):
 
 - **The square root is taken on each voter's cumulative credits, never per transaction.** If you vote 400 credits and later add 500 more, you hold √900 = 30 votes, not √400 + √500 = 42.36. Without this rule, anyone could split a big vote into many small ones and get linear voting back. The program keeps a `VoteReceipt` per voter per proposal and adjusts the tally by the *difference* between the new and the old square root.
 - **You cannot switch sides.** Once a receipt is "for", every top-up is "for". Switching would let a voter move tallies around for free.
@@ -103,9 +103,9 @@ pub fn votes_for(credits: u64) -> u128 {
 }
 ```
 
-I used smart LLMs to help me with this math. Check my work: the three arguments below are short enough to read in a minute, and the tests after them are how I checked it myself.
+Models helped me with this math, so check my work. The three arguments below take a minute to read, and the tests after them are how I checked it myself.
 
-Why it's safe:
+Why I believe it is correct:
 
 - **It terminates.** The seed `2^ceil(bits/2)` is at least √n, and Newton's step from above only ever decreases until it would increase, which is exactly the floor.
 - **It cannot overflow.** The seed is at most 2^64, every later `x` is smaller, and `n / x < 2^64`, so `x + n / x` fits in u128 with 63 bits to spare. For `votes_for`, `credits < 2^64` and `VOTE_SCALE² < 2^60`, so the product is below 2^124.
@@ -293,7 +293,7 @@ One toolchain note: Anchor 1.2.2 emits an SBPF v3 binary, which LiteSVM runs but
 
 The program goes to devnet through a GitHub workflow that builds it with `solana-verify` in a pinned Docker image (Agave 3.1.9, SBPF v0). The workflow fails unless the hash of the program on chain equals the hash of that build. It then rebuilds the public repo at the same commit and records the result on chain. The badge at the top shows the last verified hash and commit, and the program is on the [explorer](https://explorer.solana.com/address/4y17UBnZhA5iwU1n7RTZDmL6C9fv1FbDJLtECxAzVNjA?cluster=devnet). [docs/VERIFIED_BUILD.md](docs/VERIFIED_BUILD.md) has the steps, the two secrets it needs, and how to check the hash yourself.
 
-## What the tests prove
+## What the tests check
 
 104 tests run against the compiled program in-process with LiteSVM. No validator to start, no sleeping; the tests set the clock past deadlines. `anchor build` then `cargo test` runs everything in about 30 seconds.
 
@@ -322,7 +322,7 @@ The report uses fixed keypairs on purpose. Instructions that create an account (
 
 ### Security review
 
-The program went through a separate adversarial review against a Solana checklist: signer and owner checks, PDA binding, account substitution, re-initialization, arithmetic bounds, lamport accounting versus rent, state-guard completeness, clock assumptions and griefing. The write-up is in [docs/SECURITY.md](docs/SECURITY.md): threat model, ten invariants with code pointers, the findings and the full checklist with a test name for each item. One real finding, fixed: a proposal could name a contractor that can never be paid (the DAO itself, the escrow, the system program), which would have stranded the SOL until a cancel. The rest are known limitations, each with a test.
+I reviewed the program myself against a Solana checklist, with model help: signer and owner checks, PDA binding, account substitution, re-initialization, arithmetic bounds, lamport accounting versus rent, state-guard completeness, clock assumptions and griefing. Nobody else has audited it. The write-up is in [docs/SECURITY.md](docs/SECURITY.md): threat model, ten invariants with code pointers, ten findings and the full checklist with a test name for each item. Two findings were fixed: a proposal could name a contractor that can never be paid (the DAO itself, the escrow, the system program), which would have stranded the SOL until a cancel, and the security.txt still carried placeholder contacts. The other eight are limitations I accepted, each with a test.
 
 <p align="center"><img src="docs/images/cargo-test-security.png" width="880" alt="The 47 security tests, each named after the attack it rules out"></p>
 
@@ -353,6 +353,12 @@ docs/figures/              interactive figures and the vendored drawing kits
 docs/hero/                 the README hero composition and its film script
 docs/images/               everything the README shows
 ```
+
+## Tools I use
+
+I actively use Codex, Claude, DeepSeek through Hermes, and Kimi to experiment and develop Krill. They help me try implementations, debug problems, inspect ideas, and review changes.
+
+I also use DeepSeek through Hermes and Kimi for security audits.
 
 ## Third-party notices
 
